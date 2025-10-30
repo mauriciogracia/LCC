@@ -7,7 +7,7 @@
     /// </summary>
     public class UserPartial
     {
-        public string uid = string.Empty;
-        public string referralCode = string.Empty;
+        public string Uid { get; set; } = string.Empty;
+        public string ReferralCode { get; set; } = string.Empty;
     }
 }

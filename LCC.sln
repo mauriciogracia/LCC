@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35728.132 d17.12
+VisualStudioVersion = 17.12.35728.132
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LCC", "LCC.csproj", "{713B10B2-8AA4-4970-AE8D-3784F7976CE1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LCC", "LCC\LCC.csproj", "{713B10B2-8AA4-4970-AE8D-3784F7976CE1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LCC-Tests", "LCC-Tests\LCC-Tests.csproj", "{64E7AB8F-DDBF-4BD6-84ED-00C19F1DF985}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{713B10B2-8AA4-4970-AE8D-3784F7976CE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{713B10B2-8AA4-4970-AE8D-3784F7976CE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{713B10B2-8AA4-4970-AE8D-3784F7976CE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64E7AB8F-DDBF-4BD6-84ED-00C19F1DF985}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64E7AB8F-DDBF-4BD6-84ED-00C19F1DF985}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64E7AB8F-DDBF-4BD6-84ED-00C19F1DF985}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64E7AB8F-DDBF-4BD6-84ED-00C19F1DF985}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
