@@ -1,9 +1,13 @@
 ﻿using LCC.Interfaces;
+using LCC.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LCC.Controllers
 {
-    [Route("api/[controller]")]
+    /// <summary>
+    /// In real life all this method should have error handling (try/catch) and asyn calls since some sort of repository/database will be used
+    /// </summary>
+    [Route("api/")]
     [ApiController]
     public class ReferralsController : ControllerBase
     {
@@ -18,14 +22,25 @@ namespace LCC.Controllers
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        [HttpGet("GetReferralCode")]
-        public string GetReferralCode(string uid)
+        [HttpGet("referral-code/{uid}")]
+        public ActionResult<string> GetReferralCode(string uid)
         {
-            return referralService.GetUserReferralCode(uid);
+            var code = referralService.GetUserReferralCode(uid);
+            return Ok(code);
+        }
+
+        [HttpGet("referrals/{uid}")]
+        public ActionResult<IEnumerable<Referral>> GetReferrals(string uid)
+        {
+            var referrals = referralService.GetUserReferrals(uid);
+            return Ok(referrals);
+        }
+
+        [HttpPost("referrals")]
+        public ActionResult<bool> AddReferral([FromBody] ReferralAddRequest request)
+        {
+            bool result = referralService.AddReferral(new Referral( request.Uid, request.Name, request.Method));
+            return Ok(result);
         }
     }
-    
-
-    
-
 }

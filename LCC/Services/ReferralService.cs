@@ -11,23 +11,22 @@ namespace LCC.Services
         //TODO MGG - create a class for this: string, List<Referral>
         Dictionary<string, List<Referral>> referralsByUid = new Dictionary<string, List<Referral>>();
 
-        //TODO MGG - maybe pass Referral as argument and return success (true/false)
-        public Referral AddReferral(string uid, string name, ReferralMethod method)
+        public bool AddReferral(Referral referral)
         {
-            Referral referral ;
+            bool success = false ;
+            string uid = referral.Uid;
 
             //Is the first referral for the user
             if (!referralsByUid.ContainsKey(uid))
                 referralsByUid[uid] = new List<Referral>();
 
-            referral = new Referral(uid, name, method);
-
             if (!referralsByUid[uid].Contains(referral))
             {
                 referralsByUid[uid].Add(referral);
+                success = true ;
             }
 
-            return referral;
+            return success;
         }
 
         /// <summary>
