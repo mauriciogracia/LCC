@@ -1,3 +1,6 @@
+using LCC.Interfaces;
+using LCC.Services;
+
 namespace LCC
 {
     public class Program
@@ -7,6 +10,7 @@ namespace LCC
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Services.AddScoped<IReferralFeatures, ReferralService>();
             builder.Services.AddControllers();
 
             // Add Swagger services

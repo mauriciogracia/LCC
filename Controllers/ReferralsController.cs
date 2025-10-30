@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using LCC.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LCC.Controllers
@@ -7,6 +7,12 @@ namespace LCC.Controllers
     [ApiController]
     public class ReferralsController : ControllerBase
     {
+        IReferralFeatures referralService;
+        public ReferralsController(IReferralFeatures referral)
+        {
+            referralService = referral;
+        }
+
         /// <summary>
         /// referralCode = GetUniqueReferralCode (uid) 
         /// </summary>
@@ -15,9 +21,7 @@ namespace LCC.Controllers
         [HttpGet("GetReferralCode")]
         public string GetReferralCode(string uid)
         {
-            string code = string.Empty;
-
-            return code;
+            return referralService.GetUserReferralCode(uid);
         }
     }
     
