@@ -8,6 +8,8 @@ namespace LCC.Interfaces
 
         IEnumerable<Referral> GetUserReferrals(string uid);
 
-         bool AddReferral(Referral referral);
+        string PrepareMessage(ReferralMethod method, string referralCode);
+
+        bool AddReferral(Referral referral);
     }
 }

@@ -1,6 +1,5 @@
 ﻿using LCC.Interfaces;
 using LCC.Models;
-using System.Collections.Generic;
 
 namespace LCC.Services
 {
@@ -70,6 +69,18 @@ namespace LCC.Services
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
             return string.Concat(hash.Take(6).Select(b => chars[b % chars.Length]));
+        }
+
+        string template = $@"Join me in earning cash for our school by using the Carton Caps app. It’s an easy way to make a difference. 
+All you have to do is buy Carton Caps participating products (like Cheerios!) and scan your grocery receipt. 
+Carton Caps are worth $.10 each and they add up fast! Twice a year, our school receives a check to help pay 
+for whatever we need - equipment, supplies or experiences the kids love!
+
+Download the Carton Caps app here: https://cartoncaps.link/abfilefa90p?referral_code=";
+        
+        public string PrepareMessage(ReferralMethod method, string referralCode)
+        {
+            return ((method == ReferralMethod.SMS) ? "Hi! " : "Hey\n")+template+referralCode;
         }
     }
 }

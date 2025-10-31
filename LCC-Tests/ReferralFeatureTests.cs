@@ -8,6 +8,7 @@ namespace LCC.Tests
     {
         IReferralFeatures _ref = new ReferralService();
         string defaultUid = "uid123";
+        string refCode = "A1B2C3";
 
         [Fact]
         public void SameReferralCodePerUser()
@@ -57,6 +58,22 @@ namespace LCC.Tests
 
             refs = _ref.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 3); //the number keeps the same 3 items
+        }
+
+        [Fact]
+        public void VeryInviteMessageSMS()
+        {
+            string msg = _ref.PrepareMessage(ReferralMethod.SMS, refCode);
+
+            Assert.True(msg.Substring(0, 4) == "Hi! ");
+        }
+
+        [Fact]
+        public void VeryInviteMessageOtherApps()
+        {
+            string msg = _ref.PrepareMessage(ReferralMethod.SHARE, refCode);
+
+            Assert.True(msg.Substring(0, 4) == "Hey\n");
         }
     }
 }
