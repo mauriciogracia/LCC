@@ -59,7 +59,6 @@ namespace LCC.Tests
         [Fact]
         public async void EmptyListingReferrals()
         {
-            bool success;
             IEnumerable<Referral> refs = await refService.GetUserReferrals("INVALID");
 
             Assert.Empty(refs);

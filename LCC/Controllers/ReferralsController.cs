@@ -1,7 +1,6 @@
 ﻿using LCC.Interfaces;
 using LCC.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.Reflection.Metadata;
 
 namespace LCC.Controllers
 {
@@ -27,6 +26,7 @@ namespace LCC.Controllers
         /// <param name="uid"></param>
         /// <returns></returns>
         [HttpGet("referrals/code/{uid}")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public async Task<ActionResult<string>> GetReferralCode(string uid)
         {
             if (string.IsNullOrEmpty(uid))
@@ -35,10 +35,23 @@ namespace LCC.Controllers
                 log.error(msg);
                 return BadRequest(msg);
             }
-            var code = await referralService.GetUserReferralCode(uid);
-            return Ok(code);
+            try
+            {
+                var code = await referralService.GetUserReferralCode(uid);
+                return Ok(code);
+            }
+            catch (Exception ex)
+            {
+                log.error(ex.Message);
+                return StatusCode(500, "An unexpected error occurred.");
+            }
         }
 
+        /// <summary>
+        /// Gets the Referrals of a given user (uid)
+        /// </summary>
+        /// <param name="uid"></param>
+        /// <returns></returns>
         [HttpGet("referrals/list/{uid}")]
         public async Task<ActionResult<IEnumerable<Referral>>> GetReferrals(string uid)
         {
@@ -48,9 +61,24 @@ namespace LCC.Controllers
                 log.error(msg);
                 return BadRequest(msg);
             }
-            var referrals = await referralService.GetUserReferrals(uid);
-            return Ok(referrals);
+
+            try
+            {
+                var referrals = await referralService.GetUserReferrals(uid);
+                return Ok(referrals);
+            }
+            catch (Exception ex)
+            {
+                log.error(ex.Message);
+                return StatusCode(500, "An unexpected error occurred.");
+            }
+            
         }
+        /// <summary>
+        /// Adds a Referral to a user using the ReferralAddRequest
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
 
         [HttpPost("referrals")]
         public async Task<ActionResult<bool>> AddReferral([FromBody] ReferralAddRequest request)
@@ -64,17 +92,34 @@ namespace LCC.Controllers
                 return BadRequest(errorMsg);
             }
 
-            if(!await referralService.IsValidReferralCode(request.ReferralCode))
+            try
             {
-                var msg = $"Invalid referral code: {request.ReferralCode}";
-                log.error(msg);
-                return BadRequest(msg);
-            }
+                bool isValidCode = await referralService.IsValidReferralCode(request.ReferralCode);
 
-            bool result = await referralService.AddReferral(new Referral( request.Uid, request.Name, request.Method, request.ReferralCode));
-            return Ok(result);
+                if (!isValidCode)
+                {
+                    var msg = $"Invalid referral code: {request.ReferralCode}";
+                    log.error(msg);
+                    return BadRequest(msg);
+                }
+
+                bool result = await referralService.AddReferral(new Referral(request.Uid, request.Name, request.Method, request.ReferralCode));
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                log.error(ex.Message);
+                return StatusCode(500, "An unexpected error occurred.");
+            }
+            
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="referralCode"></param>
+        /// <returns></returns>
         [HttpGet("referrals/invite-msg")]
         public async Task<ActionResult<string>> PrepareMessage([FromQuery] string method, [FromQuery] string referralCode)
         {
@@ -85,31 +130,53 @@ namespace LCC.Controllers
                 return BadRequest(msg);
             }
 
-            if (!await referralService.IsValidReferralCode(referralCode))
+            try
             {
-                var msg = $"Invalid referral code: {referralCode}";
-                log.error(msg);
-                return BadRequest(msg);
-            }
+                bool isValidCode = await referralService.IsValidReferralCode(referralCode);
 
-            return Ok(await referralService.PrepareMessage(rm, referralCode));
+                if (!isValidCode)
+                {
+                    var msg = $"Invalid referral code: {referralCode}";
+                    log.error(msg);
+                    return BadRequest(msg);
+                }
+                var inviteMessage = await referralService.PrepareMessage(rm, referralCode);
+
+                return Ok(inviteMessage);
+            }
+            catch (Exception ex)
+            {
+                log.error(ex.Message);
+                return StatusCode(500, "An unexpected error occurred.");
+            }
         }
 
         [HttpGet("referrals/{referralCode}")]
-        public async Task<ActionResult<string>> GetReferral(string referralCode)
+        public async Task<ActionResult<Referral>> GetReferral(string referralCode)
         {
-            if (!await referralService.IsValidReferralCode(referralCode))
+            try
             {
-                var msg = $"Invalid referral code: {referralCode}";
-                log.error(msg);
-                return BadRequest(msg);
-            }
+                bool isValidCode = await referralService.IsValidReferralCode(referralCode);
 
-            return Ok(referralService.GetReferral(referralCode));
+                if (!isValidCode)
+                {
+                    var msg = $"Invalid referral code: {referralCode}";
+                    log.error(msg);
+                    return BadRequest(msg);
+                }
+
+                var referral = await referralService.GetReferral(referralCode);
+                return Ok(referral);
+            }
+            catch (Exception ex)
+            {
+                log.error(ex.Message);
+                return StatusCode(500, "An unexpected error occurred.");
+            }
         }
 
         [HttpPut("referrals/{referralCode}")]
-        public async Task<ActionResult<string>> UpdateReferral(string referralCode, [FromQuery] string status)
+        public async Task<ActionResult<bool>> UpdateReferral(string referralCode, [FromQuery] string status)
         {
             if (!Enum.TryParse<ReferralStatus>(status, true, out var rs))
             {
@@ -118,14 +185,26 @@ namespace LCC.Controllers
                 return BadRequest(msg);
             }
 
-            if (!await referralService.IsValidReferralCode(referralCode))
+            try
             {
-                var msg = $"Invalid referral code: {referralCode}";
-                log.error(msg);
-                return BadRequest(msg);
-            }
+                bool isValidCode = await referralService.IsValidReferralCode(referralCode);
 
-            return Ok(referralService.UpdateReferral(referralCode, rs));
+                if (!isValidCode)
+                {
+                    var msg = $"Invalid referral code: {referralCode}";
+                    log.error(msg);
+                    return BadRequest(msg);
+                }
+
+                bool succeeded = await referralService.UpdateReferral(referralCode, rs);
+
+                return Ok(succeeded);
+            }
+            catch (Exception ex)
+            {
+                log.error(ex.Message);
+                return StatusCode(500, "An unexpected error occurred.");
+            }
         }
     }
 }

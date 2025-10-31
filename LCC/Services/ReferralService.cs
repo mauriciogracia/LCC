@@ -52,7 +52,11 @@ namespace LCC.Services
         public async Task<IEnumerable<Referral>> GetUserReferrals(string uid)
         {
             log.info($"Getting referrals for : {uid}");
-            return referralerralsByUid.TryGetValue(uid, out var resp) ? resp : Enumerable.Empty<Referral>();
+            
+            return await Task.Run(() =>
+            {
+                return referralerralsByUid.TryGetValue(uid, out var resp) ? resp : Enumerable.Empty<Referral>();
+            });
         }
 
         /// <summary>
@@ -68,12 +72,18 @@ namespace LCC.Services
             byte[] hash = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(uid));
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-            return string.Concat(hash.Take(6).Select(b => chars[b % chars.Length]));
+            return await Task.Run(() =>
+            {
+                return string.Concat(hash.Take(6).Select(b => chars[b % chars.Length]));
+            });
         }
 
         public async Task<bool> IsValidReferralCode(string code)
         {
-            return Regex.IsMatch(code, @"^[A-Z0-9]{6}$");
+            return await Task.Run(() =>
+            {
+                return Regex.IsMatch(code, @"^[A-Z0-9]{6}$");
+            });
         }
         /// <summary>
         /// Add a referral to the uid of the referral
@@ -85,58 +95,70 @@ namespace LCC.Services
             bool success = false;
             string uid = referral.Uid;
 
-            log.info($"Adding referral...");
-            //Is the first referral for the user
-            if (!referralerralsByUid.ContainsKey(uid))
-                referralerralsByUid[uid] = new List<Referral>();
-
-            if (!referralerralsByUid[uid].Contains(referral))
+            return await Task.Run(() =>
             {
-                referralerralsByUid[uid].Add(referral);
-                success = true;
-            }
-            else
-            {
-                log.error($"Referral could not be added");
-            }
+                log.info($"Adding referral...");
+                //Is the first referral for the user
+                if (!referralerralsByUid.ContainsKey(uid))
+                    referralerralsByUid[uid] = new List<Referral>();
 
-            return success;
+                if (!referralerralsByUid[uid].Contains(referral))
+                {
+                    referralerralsByUid[uid].Add(referral);
+                    success = true;
+                }
+                else
+                {
+                    log.error($"Referral could not be added");
+                }
+
+                return success;
+            });
         }
 
         public async Task<string> PrepareMessage(ReferralMethod method, string referralCode)
         {
-            log.info($"Preparing message based on method/app");
-            return ((method == ReferralMethod.SMS) ? "Hi! " : "Hey\n")+template+referralCode;
+            return await Task.Run(() =>
+            {
+                log.info($"Preparing message based on method/app");
+                return ((method == ReferralMethod.SMS) ? "Hi! " : "Hey\n") + template + referralCode;
+            });
         }
 
         public async Task<bool> UpdateReferral(string referralCode, ReferralStatus newStatus)
         {
             bool success = false;
-            Referral referral = await GetReferral(referralCode);
+            Referral ?referral = await GetReferral(referralCode);
 
-            if(referral == null )
+            return await Task.Run(() =>
             {
-                log.error($"No referral found for {referralCode}");
-            }
-            else
-            {
-                referral.Status = newStatus;
-                referral.UpdatedAt = DateTime.Now;
+                if (referral == null)
+                {
+                    log.error($"No referral found for {referralCode}");
+                }
+                else
+                {
+                    referral.Status = newStatus;
+                    referral.UpdatedAt = DateTime.Now;
 
-                referralerralsByUid[referral.Uid].Find(r => r.Uid == referralCode);
-                success = true;
-            }
+                    referralerralsByUid[referral.Uid].Find(r => r.Uid == referralCode);
+                    success = true;
+                }
 
-            return success;
+                return success;
+            });
         }
 
         public async Task<Referral?> GetReferral(string referralCode)
         {
-            Referral? referral = referralerralsByUid
+            return await Task.Run(() =>
+            {
+                Referral? referral = referralerralsByUid
                                 .SelectMany(kvp => kvp.Value)
                                 .FirstOrDefault(r => r.ReferralCode == referralCode);
 
-            return referral;
+                return referral;
+            });
         }
 
         //TODO MGG - this should be in a .json or properties file instead or retrieved from a template repository
