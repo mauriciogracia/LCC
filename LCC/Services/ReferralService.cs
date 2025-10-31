@@ -9,24 +9,6 @@ namespace LCC.Services
         List<UserPartial> users = new List<UserPartial>();
         Dictionary<string, List<Referral>> referralsByUid = new Dictionary<string, List<Referral>>();
 
-        public bool AddReferral(Referral referral)
-        {
-            bool success = false ;
-            string uid = referral.Uid;
-
-            //Is the first referral for the user
-            if (!referralsByUid.ContainsKey(uid))
-                referralsByUid[uid] = new List<Referral>();
-
-            if (!referralsByUid[uid].Contains(referral))
-            {
-                referralsByUid[uid].Add(referral);
-                success = true ;
-            }
-
-            return success;
-        }
-
         /// <summary>
         /// In real life the uid must already exist, since I'm mocking the service
         /// when a UID does not exist, it will be added to simplify flow
@@ -36,9 +18,9 @@ namespace LCC.Services
         public string GetUserReferralCode(string uid)
         {
             string code;
-            UserPartial ?usr = users.Find(u => u.Uid.Equals(uid));
+            UserPartial? usr = users.Find(u => u.Uid.Equals(uid));
 
-            if(usr == null)
+            if (usr == null)
             {
                 usr = new UserPartial();
                 usr.Uid = uid;
@@ -46,10 +28,15 @@ namespace LCC.Services
                 users.Add(usr); //this is an in memory implementation
             }
 
-            code = usr.ReferralCode ;
+            code = usr.ReferralCode;
             return code;
         }
 
+        /// <summary>
+        /// List user referrals 
+        /// </summary>
+        /// <param name="uid"></param>
+        /// <returns></returns>
         public IEnumerable<Referral> GetUserReferrals(string uid)
         {
             return referralsByUid.TryGetValue(uid, out var resp) ? resp : Enumerable.Empty<Referral>();
@@ -60,7 +47,6 @@ namespace LCC.Services
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-
         private string PrepareReferralCode(string uid)
         {
             using var sha256 = System.Security.Cryptography.SHA256.Create();
@@ -70,13 +56,29 @@ namespace LCC.Services
             return string.Concat(hash.Take(6).Select(b => chars[b % chars.Length]));
         }
 
-        string template = $@"Join me in earning cash for our school by using the Carton Caps app. It’s an easy way to make a difference. 
-All you have to do is buy Carton Caps participating products (like Cheerios!) and scan your grocery receipt. 
-Carton Caps are worth $.10 each and they add up fast! Twice a year, our school receives a check to help pay 
-for whatever we need - equipment, supplies or experiences the kids love!
+        /// <summary>
+        /// Add a referral to the uid of the referral
+        /// </summary>
+        /// <param name="referral"></param>
+        /// <returns></returns>
+        public bool AddReferral(Referral referral)
+        {
+            bool success = false;
+            string uid = referral.Uid;
 
-Download the Carton Caps app here: https://cartoncaps.link/abfilefa90p?referral_code=";
-        
+            //Is the first referral for the user
+            if (!referralsByUid.ContainsKey(uid))
+                referralsByUid[uid] = new List<Referral>();
+
+            if (!referralsByUid[uid].Contains(referral))
+            {
+                referralsByUid[uid].Add(referral);
+                success = true;
+            }
+
+            return success;
+        }
+
         public string PrepareMessage(ReferralMethod method, string referralCode)
         {
             return ((method == ReferralMethod.SMS) ? "Hi! " : "Hey\n")+template+referralCode;
@@ -90,5 +92,12 @@ Download the Carton Caps app here: https://cartoncaps.link/abfilefa90p?referral_
 
             return _ref ;
         }
+
+        string template = $@"Join me in earning cash for our school by using the Carton Caps app. It’s an easy way to make a difference. 
+All you have to do is buy Carton Caps participating products (like Cheerios!) and scan your grocery receipt. 
+Carton Caps are worth $.10 each and they add up fast! Twice a year, our school receives a check to help pay 
+for whatever we need - equipment, supplies or experiences the kids love!
+
+Download the Carton Caps app here: https://cartoncaps.link/abfilefa90p?referral_code=";
     }
 }
