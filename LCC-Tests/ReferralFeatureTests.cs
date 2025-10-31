@@ -39,21 +39,21 @@ namespace LCC.Tests
 
             Assert.Empty(refs);
 
-            success = _ref.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.SMS));
+            success = _ref.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.SMS, refCode));
             refs = _ref.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 1);
 
-            success = _ref.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.EMAIL));
+            success = _ref.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.EMAIL, refCode));
             refs = _ref.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 2);
 
-            success = _ref.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.SHARE));
+            success = _ref.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.SHARE, refCode));
             refs = _ref.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 3);
 
 
             //adding thes same referral should NOT added
-            success = _ref.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.EMAIL));
+            success = _ref.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.EMAIL, refCode));
             Assert.False(success);
 
             refs = _ref.GetUserReferrals(defaultUid);
@@ -74,6 +74,26 @@ namespace LCC.Tests
             string msg = _ref.PrepareMessage(ReferralMethod.SHARE, refCode);
 
             Assert.True(msg.Substring(0, 4) == "Hey\n");
+        }
+
+        [Fact]
+        public void ReferredPersonWorks()
+        {
+            Referral refA = new Referral(defaultUid, "Jose", ReferralMethod.SMS, refCode);
+            _ref.AddReferral(refA);
+
+            Referral ?refB = _ref.GetReferral(refCode);
+
+            Assert.Equal(refA, refB);
+            
+        }
+
+        [Fact]
+        public void NonReferredPersonWorks()
+        {
+            Referral? refB = _ref.GetReferral(refCode);
+
+            Assert.True(refB == null);
         }
     }
 }

@@ -7,7 +7,6 @@ namespace LCC.Services
     {
         //TODO MGG - In real life there should be a UserService
         List<UserPartial> users = new List<UserPartial>();
-        //TODO MGG - create a class for this: string, List<Referral>
         Dictionary<string, List<Referral>> referralsByUid = new Dictionary<string, List<Referral>>();
 
         public bool AddReferral(Referral referral)
@@ -81,6 +80,15 @@ Download the Carton Caps app here: https://cartoncaps.link/abfilefa90p?referral_
         public string PrepareMessage(ReferralMethod method, string referralCode)
         {
             return ((method == ReferralMethod.SMS) ? "Hi! " : "Hey\n")+template+referralCode;
+        }
+
+        public Referral ? GetReferral(string referralCode)
+        {
+            Referral ? _ref = referralsByUid
+                                .SelectMany(kvp => kvp.Value)
+                                .FirstOrDefault(r => r.ReferralCode == referralCode);
+
+            return _ref ;
         }
     }
 }

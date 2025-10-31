@@ -39,7 +39,7 @@ namespace LCC.Controllers
         [HttpPost("referrals")]
         public ActionResult<bool> AddReferral([FromBody] ReferralAddRequest request)
         {
-            bool result = referralService.AddReferral(new Referral( request.Uid, request.Name, request.Method));
+            bool result = referralService.AddReferral(new Referral( request.Uid, request.Name, request.Method, request.ReferralCode));
             return Ok(result);
         }
     }

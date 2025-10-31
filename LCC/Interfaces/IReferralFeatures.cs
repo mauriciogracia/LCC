@@ -11,5 +11,7 @@ namespace LCC.Interfaces
         string PrepareMessage(ReferralMethod method, string referralCode);
 
         bool AddReferral(Referral referral);
+
+        Referral ? GetReferral(string referralCode);
     }
 }

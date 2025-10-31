@@ -18,7 +18,9 @@
         public string ReferralId { get; set; }
 
         public string Uid { get; set; }
-        public string Name { get; set; } 
+        public string Name { get; set; }
+
+        public string ReferralCode { get; set; }
         public ReferralMethod Method { get; set; } 
 
         public ReferralStatus Status { get; set; }
@@ -34,11 +36,12 @@
         /// <param name="uid"></param>
         /// <param name="name"></param>
         /// <param name="method"></param>
-        public Referral(string uid,  string name, ReferralMethod method)
+        public Referral(string uid,  string name, ReferralMethod method, string referralCode)
         {
             ReferralId = GenerateReferralId();
             Uid = uid;
             Name = name;
+            ReferralCode = referralCode;
             Method = method;    
             Status = ReferralStatus.PENDING;
             CreatedAt = DateTime.UtcNow;
