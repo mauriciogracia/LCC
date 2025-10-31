@@ -26,7 +26,8 @@ There are two projects
 ## LCC - Tech Notes
 
 - A **UserService** could have been implemented specially to get the ReferralCode everything kept on the same controller to simply implementation and code review
-- The current implementation of **ReferralService** keeps the referral data in memory
-to simplify implementation and focus on the actual API, than on storying the data in a database or other persistence
+- Logging has been implemented with usage of **Ilog** interface and a concrete **ConsoleLogger**
+- **ReferralService** keeps the referral data in memory to simplify implementation and focus on the actual API, than on storying the data in a database or other persistence
 - Since **Dependency injection** is being used and the controller depends on **IReferralFeatures** 
 this means that another Service could be implemented and injected to actually store and retrieve referrals on a SQL Database or NoSQL database
+- That also means that another type of logger could be used (PlainTextLogger, EmailLogger, DatabaseLogger, CloudLogger)

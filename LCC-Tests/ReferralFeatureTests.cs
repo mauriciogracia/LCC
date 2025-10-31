@@ -6,9 +6,16 @@ namespace LCC.Tests
 {
     public class ReferralFeatureTests
     {
-        IReferralFeatures _ref = new ReferralService();
+        readonly ILog _log ;
+        IReferralFeatures _ref ;
         string defaultUid = "uid123";
         string refCode = "A1B2C3";
+
+        public ReferralFeatureTests()
+        {
+            _log = new ConsoleLogger();
+            _ref = new ReferralService(_log);
+        }
 
         [Fact]
         public void ValidateReferralCode()
@@ -105,3 +112,10 @@ namespace LCC.Tests
         }
     }
 }
+/*
+ TODO MGG - add this tests
+- test for invalid referral codes (e.g., abc123, A1B2C3D4).
+- test for GetUserReferrals when UID is unknown.
+- test for GetUserReferralCode when UID is null or empty.
+- test for PrepareMessage with invalid enum values.
+*/

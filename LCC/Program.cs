@@ -10,6 +10,7 @@ namespace LCC
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Services.AddScoped<ILog, ConsoleLogger>();
             builder.Services.AddScoped<IReferralFeatures, ReferralService>();
             builder.Services.AddControllers();
 
@@ -27,7 +28,6 @@ namespace LCC
             }
             else
             {
-                app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
             }
 

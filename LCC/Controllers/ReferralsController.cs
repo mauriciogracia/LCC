@@ -5,17 +5,21 @@ using System.Reflection.Metadata;
 
 namespace LCC.Controllers
 {
+    //TODO MGG  - Add ASYNC/AWAIT and error handling (try/catch)
     /// <summary>
-    /// In real life all this method should have error handling (try/catch) and asyn calls since some sort of repository/database will be used
+    /// Referral Controller that exposes REST endpoints 
     /// </summary>
     [Route("api/")]
     [ApiController]
     public class ReferralsController : ControllerBase
     {
+        ILog log ;
         IReferralFeatures referralService;
-        public ReferralsController(IReferralFeatures referral)
+
+        public ReferralsController(IReferralFeatures referral, ILog log)
         {
             referralService = referral;
+            this.log = log;
         }
 
         /// <summary>
@@ -28,7 +32,9 @@ namespace LCC.Controllers
         {
             if (string.IsNullOrEmpty(uid))
             {
-                return BadRequest($"Invalid uid: {uid}");
+                var msg = $"Invalid uid: {uid}";
+                log.error(msg);
+                return BadRequest(msg);
             }
             var code = referralService.GetUserReferralCode(uid);
             return Ok(code);
@@ -39,7 +45,9 @@ namespace LCC.Controllers
         {
             if (string.IsNullOrEmpty(uid))
             {
-                return BadRequest($"Invalid uid: {uid}");
+                var msg = $"Invalid uid: {uid}";
+                log.error(msg);
+                return BadRequest(msg);
             }
             var referrals = referralService.GetUserReferrals(uid);
             return Ok(referrals);
@@ -48,17 +56,20 @@ namespace LCC.Controllers
         [HttpPost("referrals")]
         public ActionResult<bool> AddReferral([FromBody] ReferralAddRequest request)
         {
-            string error = request.validate();
+            string errorMsg = request.validate();
 
             //When validation error is found on the ReferralAddRequest
-            if (!string.IsNullOrEmpty(error))
+            if (!string.IsNullOrEmpty(errorMsg))
             {
-                return BadRequest(error);
+                log.error(errorMsg);
+                return BadRequest(errorMsg);
             }
 
             if(!referralService.IsValidReferralCode(request.ReferralCode))
             {
-                return BadRequest($"Invalid referral code: {request.ReferralCode}");
+                var msg = $"Invalid referral code: {request.ReferralCode}";
+                log.error(msg);
+                return BadRequest(msg);
             }
 
             bool result = referralService.AddReferral(new Referral( request.Uid, request.Name, request.Method, request.ReferralCode));
@@ -70,12 +81,16 @@ namespace LCC.Controllers
         {
             if (!Enum.TryParse<ReferralMethod>(method, true, out var rm))
             {
-                return BadRequest($"Invalid referral method: {method}");
+                var msg = $"Invalid referral method: {method}";
+                log.error(msg);
+                return BadRequest(msg);
             }
 
             if (!referralService.IsValidReferralCode(referralCode))
             {
-                return BadRequest($"Invalid referral code: {referralCode}");
+                var msg = $"Invalid referral code: {referralCode}";
+                log.error(msg);
+                return BadRequest(msg);
             }
 
             return Ok(referralService.PrepareMessage(rm, referralCode));
@@ -86,7 +101,9 @@ namespace LCC.Controllers
         {
             if (!referralService.IsValidReferralCode(referralCode))
             {
-                return BadRequest($"Invalid referral code: {referralCode}");
+                var msg = $"Invalid referral code: {referralCode}";
+                log.error(msg);
+                return BadRequest(msg);
             }
 
             return Ok(referralService.GetReferral(referralCode));

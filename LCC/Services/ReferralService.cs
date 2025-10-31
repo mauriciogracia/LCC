@@ -6,10 +6,14 @@ namespace LCC.Services
 {
     public class ReferralService : IReferralFeatures
     {
-        //TODO MGG - In real life there should be a UserService
-        List<UserPartial> users = new List<UserPartial>();
-        Dictionary<string, List<Referral>> referralsByUid = new Dictionary<string, List<Referral>>();
+        readonly List<UserPartial> _users = new List<UserPartial>();
+        readonly Dictionary<string, List<Referral>> _referralsByUid = new Dictionary<string, List<Referral>>();
+        ILog log;
 
+        public ReferralService(ILog logger)
+        {
+            log = logger;
+        }
         /// <summary>
         /// In real life the uid must already exist, since I'm mocking the service
         /// when a UID does not exist, it will be added to simplify flow
@@ -19,14 +23,20 @@ namespace LCC.Services
         public string GetUserReferralCode(string uid)
         {
             string code;
-            UserPartial? usr = users.Find(u => u.Uid.Equals(uid));
+            UserPartial? usr = _users.Find(u => u.Uid.Equals(uid));
 
+            //a user is created on the fly to simplify scenarios and no need for seed data
             if (usr == null)
             {
                 usr = new UserPartial();
                 usr.Uid = uid;
                 usr.ReferralCode = PrepareReferralCode(uid);
-                users.Add(usr); //this is an in memory implementation
+                _users.Add(usr); //this is an in memory implementation
+                log.info($"user created: {uid}, with refCode: {usr.ReferralCode}");
+            }
+            else
+            {
+                log.info($"user already exists with refCode: {usr.ReferralCode}");
             }
 
             code = usr.ReferralCode;
@@ -40,7 +50,8 @@ namespace LCC.Services
         /// <returns></returns>
         public IEnumerable<Referral> GetUserReferrals(string uid)
         {
-            return referralsByUid.TryGetValue(uid, out var resp) ? resp : Enumerable.Empty<Referral>();
+            log.info($"Getting referrals for : {uid}");
+            return _referralsByUid.TryGetValue(uid, out var resp) ? resp : Enumerable.Empty<Referral>();
         }
 
         /// <summary>
@@ -50,6 +61,8 @@ namespace LCC.Services
         /// <returns></returns>
         private string PrepareReferralCode(string uid)
         {
+            log.info($"Generating referral code : {uid}");
+
             using var sha256 = System.Security.Cryptography.SHA256.Create();
             byte[] hash = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(uid));
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -71,14 +84,19 @@ namespace LCC.Services
             bool success = false;
             string uid = referral.Uid;
 
+            log.info($"Adding referral...");
             //Is the first referral for the user
-            if (!referralsByUid.ContainsKey(uid))
-                referralsByUid[uid] = new List<Referral>();
+            if (!_referralsByUid.ContainsKey(uid))
+                _referralsByUid[uid] = new List<Referral>();
 
-            if (!referralsByUid[uid].Contains(referral))
+            if (!_referralsByUid[uid].Contains(referral))
             {
-                referralsByUid[uid].Add(referral);
+                _referralsByUid[uid].Add(referral);
                 success = true;
+            }
+            else
+            {
+                log.error($"Referral could not be added");
             }
 
             return success;
@@ -86,19 +104,20 @@ namespace LCC.Services
 
         public string PrepareMessage(ReferralMethod method, string referralCode)
         {
+            log.info($"Preparing message based on method/app");
             return ((method == ReferralMethod.SMS) ? "Hi! " : "Hey\n")+template+referralCode;
         }
 
         public Referral ? GetReferral(string referralCode)
         {
-            Referral ? _ref = referralsByUid
+            Referral ? _ref = _referralsByUid
                                 .SelectMany(kvp => kvp.Value)
                                 .FirstOrDefault(r => r.ReferralCode == referralCode);
 
             return _ref ;
         }
 
-        string template = $@"Join me in earning cash for our school by using the Carton Caps app. It’s an easy way to make a difference. 
+        const string template = $@"Join me in earning cash for our school by using the Carton Caps app. It’s an easy way to make a difference. 
 All you have to do is buy Carton Caps participating products (like Cheerios!) and scan your grocery receipt. 
 Carton Caps are worth $.10 each and they add up fast! Twice a year, our school receives a check to help pay 
 for whatever we need - equipment, supplies or experiences the kids love!
