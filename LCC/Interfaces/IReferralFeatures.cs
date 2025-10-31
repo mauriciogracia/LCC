@@ -6,6 +6,7 @@ namespace LCC.Interfaces
     {
         string GetUserReferralCode(string uid);
 
+        bool IsValidReferralCode(string code);
         IEnumerable<Referral> GetUserReferrals(string uid);
 
         string PrepareMessage(ReferralMethod method, string referralCode);

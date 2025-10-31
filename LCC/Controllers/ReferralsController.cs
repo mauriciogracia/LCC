@@ -1,6 +1,7 @@
 ﻿using LCC.Interfaces;
 using LCC.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Reflection.Metadata;
 
 namespace LCC.Controllers
 {
@@ -25,7 +26,10 @@ namespace LCC.Controllers
         [HttpGet("referrals/code/{uid}")]
         public ActionResult<string> GetReferralCode(string uid)
         {
-            //TODO MGG - validate arguments and return BAD REQUEST
+            if (string.IsNullOrEmpty(uid))
+            {
+                return BadRequest($"Invalid uid: {uid}");
+            }
             var code = referralService.GetUserReferralCode(uid);
             return Ok(code);
         }
@@ -33,7 +37,10 @@ namespace LCC.Controllers
         [HttpGet("referrals/list/{uid}")]
         public ActionResult<IEnumerable<Referral>> GetReferrals(string uid)
         {
-            //TODO MGG - validate arguments and return BAD REQUEST
+            if (string.IsNullOrEmpty(uid))
+            {
+                return BadRequest($"Invalid uid: {uid}");
+            }
             var referrals = referralService.GetUserReferrals(uid);
             return Ok(referrals);
         }
@@ -41,7 +48,19 @@ namespace LCC.Controllers
         [HttpPost("referrals")]
         public ActionResult<bool> AddReferral([FromBody] ReferralAddRequest request)
         {
-            //TODO MGG - validate arguments and return BAD REQUEST
+            string error = request.validate();
+
+            //When validation error is found on the ReferralAddRequest
+            if (!string.IsNullOrEmpty(error))
+            {
+                return BadRequest(error);
+            }
+
+            if(!referralService.IsValidReferralCode(request.ReferralCode))
+            {
+                return BadRequest($"Invalid referral code: {request.ReferralCode}");
+            }
+
             bool result = referralService.AddReferral(new Referral( request.Uid, request.Name, request.Method, request.ReferralCode));
             return Ok(result);
         }
@@ -54,14 +73,23 @@ namespace LCC.Controllers
                 return BadRequest($"Invalid referral method: {method}");
             }
 
+            if (!referralService.IsValidReferralCode(referralCode))
+            {
+                return BadRequest($"Invalid referral code: {referralCode}");
+            }
+
             return Ok(referralService.PrepareMessage(rm, referralCode));
         }
 
         [HttpGet("referrals/{refCode}")]
-        public ActionResult<string> GetReferral(string refCode)
+        public ActionResult<string> GetReferral(string referralCode)
         {
-            //TODO MGG - validate arguments and return BAD REQUEST
-            return Ok(referralService.GetReferral(refCode));
+            if (!referralService.IsValidReferralCode(referralCode))
+            {
+                return BadRequest($"Invalid referral code: {referralCode}");
+            }
+
+            return Ok(referralService.GetReferral(referralCode));
         }
     }
 }

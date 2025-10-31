@@ -1,5 +1,6 @@
 ﻿using LCC.Interfaces;
 using LCC.Models;
+using System.Text.RegularExpressions;
 
 namespace LCC.Services
 {
@@ -56,6 +57,10 @@ namespace LCC.Services
             return string.Concat(hash.Take(6).Select(b => chars[b % chars.Length]));
         }
 
+        public bool IsValidReferralCode(string code)
+        {
+            return Regex.IsMatch(code, @"^[A-Z0-9]{6}$");
+        }
         /// <summary>
         /// Add a referral to the uid of the referral
         /// </summary>

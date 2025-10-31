@@ -11,10 +11,18 @@ namespace LCC.Tests
         string refCode = "A1B2C3";
 
         [Fact]
+        public void ValidateReferralCode()
+        {
+            string code = _ref.GetUserReferralCode(defaultUid);
+
+            Assert.True(_ref.IsValidReferralCode(code));
+        }
+
+        [Fact]
         public void SameReferralCodePerUser()
         {
-            var code1 = _ref.GetUserReferralCode(defaultUid);
-            var code2 = _ref.GetUserReferralCode(defaultUid);
+            string code1 = _ref.GetUserReferralCode(defaultUid);
+            string code2 = _ref.GetUserReferralCode(defaultUid);
 
             Assert.Equal(code1, code2);
             Assert.Equal(6, code1.Length);
@@ -23,9 +31,9 @@ namespace LCC.Tests
         [Fact]
         public void UniqueReferralPerUser()
         {
-            var code1 = _ref.GetUserReferralCode(defaultUid);
-            var code2 = _ref.GetUserReferralCode("uid456");
-            var code3 = _ref.GetUserReferralCode(defaultUid);
+            string code1 = _ref.GetUserReferralCode(defaultUid);
+            string code2 = _ref.GetUserReferralCode("uid456");
+            string code3 = _ref.GetUserReferralCode(defaultUid);
 
             Assert.NotEqual(code1, code2);
             Assert.Equal(code1, code3);
@@ -52,7 +60,7 @@ namespace LCC.Tests
             Assert.True(refs.Count() == 3);
 
 
-            //adding thes same referral should NOT added
+            //adding the same referral should NOT really add it
             success = _ref.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.EMAIL, refCode));
             Assert.False(success);
 
