@@ -1,5 +1,6 @@
 ﻿using LCC.Interfaces;
 using LCC.Models;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace LCC.Services
@@ -7,7 +8,7 @@ namespace LCC.Services
     public class ReferralService : IReferralFeatures
     {
         readonly List<UserPartial> _users = new List<UserPartial>();
-        readonly Dictionary<string, List<Referral>> _referralsByUid = new Dictionary<string, List<Referral>>();
+        readonly Dictionary<string, List<Referral>> referralerralsByUid = new Dictionary<string, List<Referral>>();
         ILog log;
 
         public ReferralService(ILog logger)
@@ -20,7 +21,7 @@ namespace LCC.Services
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public string GetUserReferralCode(string uid)
+        public async Task<string> GetUserReferralCode(string uid)
         {
             string code;
             UserPartial? usr = _users.Find(u => u.Uid.Equals(uid));
@@ -30,13 +31,13 @@ namespace LCC.Services
             {
                 usr = new UserPartial();
                 usr.Uid = uid;
-                usr.ReferralCode = PrepareReferralCode(uid);
-                _users.Add(usr); //this is an in memory implementation
+                usr.ReferralCode = await PrepareReferralCode(uid);
+                _users.Add(usr); 
                 log.info($"user created: {uid}, with refCode: {usr.ReferralCode}");
             }
             else
             {
-                log.info($"user already exists with refCode: {usr.ReferralCode}");
+                log.info($"user exists with refCode: {usr.ReferralCode}");
             }
 
             code = usr.ReferralCode;
@@ -48,10 +49,10 @@ namespace LCC.Services
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public IEnumerable<Referral> GetUserReferrals(string uid)
+        public async Task<IEnumerable<Referral>> GetUserReferrals(string uid)
         {
             log.info($"Getting referrals for : {uid}");
-            return _referralsByUid.TryGetValue(uid, out var resp) ? resp : Enumerable.Empty<Referral>();
+            return referralerralsByUid.TryGetValue(uid, out var resp) ? resp : Enumerable.Empty<Referral>();
         }
 
         /// <summary>
@@ -59,7 +60,7 @@ namespace LCC.Services
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        private string PrepareReferralCode(string uid)
+        private async Task<string> PrepareReferralCode(string uid)
         {
             log.info($"Generating referral code : {uid}");
 
@@ -70,7 +71,7 @@ namespace LCC.Services
             return string.Concat(hash.Take(6).Select(b => chars[b % chars.Length]));
         }
 
-        public bool IsValidReferralCode(string code)
+        public async Task<bool> IsValidReferralCode(string code)
         {
             return Regex.IsMatch(code, @"^[A-Z0-9]{6}$");
         }
@@ -79,19 +80,19 @@ namespace LCC.Services
         /// </summary>
         /// <param name="referral"></param>
         /// <returns></returns>
-        public bool AddReferral(Referral referral)
+        public async Task<bool> AddReferral(Referral referral)
         {
             bool success = false;
             string uid = referral.Uid;
 
             log.info($"Adding referral...");
             //Is the first referral for the user
-            if (!_referralsByUid.ContainsKey(uid))
-                _referralsByUid[uid] = new List<Referral>();
+            if (!referralerralsByUid.ContainsKey(uid))
+                referralerralsByUid[uid] = new List<Referral>();
 
-            if (!_referralsByUid[uid].Contains(referral))
+            if (!referralerralsByUid[uid].Contains(referral))
             {
-                _referralsByUid[uid].Add(referral);
+                referralerralsByUid[uid].Add(referral);
                 success = true;
             }
             else
@@ -102,20 +103,43 @@ namespace LCC.Services
             return success;
         }
 
-        public string PrepareMessage(ReferralMethod method, string referralCode)
+        public async Task<string> PrepareMessage(ReferralMethod method, string referralCode)
         {
             log.info($"Preparing message based on method/app");
             return ((method == ReferralMethod.SMS) ? "Hi! " : "Hey\n")+template+referralCode;
         }
 
-        public Referral ? GetReferral(string referralCode)
+        public async Task<bool> UpdateReferral(string referralCode, ReferralStatus newStatus)
         {
-            Referral ? _ref = _referralsByUid
+            bool success = false;
+            Referral referral = await GetReferral(referralCode);
+
+            if(referral == null )
+            {
+                log.error($"No referral found for {referralCode}");
+            }
+            else
+            {
+                referral.Status = newStatus;
+                referral.UpdatedAt = DateTime.Now;
+
+                referralerralsByUid[referral.Uid].Find(r => r.Uid == referralCode);
+                success = true;
+            }
+
+            return success;
+        }
+
+        public async Task<Referral?> GetReferral(string referralCode)
+        {
+            Referral? referral = referralerralsByUid
                                 .SelectMany(kvp => kvp.Value)
                                 .FirstOrDefault(r => r.ReferralCode == referralCode);
 
-            return _ref ;
+            return referral;
         }
+
+        //TODO MGG - this should be in a .json or properties file instead or retrieved from a template repository
 
         const string template = $@"Join me in earning cash for our school by using the Carton Caps app. It’s an easy way to make a difference. 
 All you have to do is buy Carton Caps participating products (like Cheerios!) and scan your grocery receipt. 

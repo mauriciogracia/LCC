@@ -4,15 +4,18 @@ namespace LCC.Interfaces
 {
     public interface IReferralFeatures
     {
-        string GetUserReferralCode(string uid);
+        Task<string> GetUserReferralCode(string uid);
 
-        bool IsValidReferralCode(string code);
-        IEnumerable<Referral> GetUserReferrals(string uid);
+        Task<bool> IsValidReferralCode(string code);
+        
+        Task<IEnumerable<Referral>> GetUserReferrals(string uid);
 
-        string PrepareMessage(ReferralMethod method, string referralCode);
+        Task<string> PrepareMessage(ReferralMethod method, string referralCode);
 
-        bool AddReferral(Referral referral);
+        Task<bool> AddReferral(Referral referral);
 
-        Referral ? GetReferral(string referralCode);
+        Task<Referral?> GetReferral(string referralCode);
+
+        Task<bool> UpdateReferral(string referralCode, ReferralStatus newStatus);
     }
 }

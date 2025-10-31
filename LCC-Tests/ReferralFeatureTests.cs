@@ -7,115 +7,143 @@ namespace LCC.Tests
     public class ReferralFeatureTests
     {
         readonly ILog _log ;
-        IReferralFeatures _ref ;
+        IReferralFeatures refService ;
         string defaultUid = "uid123";
         string refCode = "A1B2C3";
 
         public ReferralFeatureTests()
         {
             _log = new ConsoleLogger();
-            _ref = new ReferralService(_log);
+            refService = new ReferralService(_log);
         }
 
         [Fact]
-        public void ValidateReferralCode()
+        public async void DetectIncorrectReferralCodes()
         {
-            string code = _ref.GetUserReferralCode(defaultUid);
-
-            Assert.True(_ref.IsValidReferralCode(code));
+            Assert.False(await refService.IsValidReferralCode(""));
+            Assert.False(await refService.IsValidReferralCode("AA"));
+            Assert.False(await refService.IsValidReferralCode("ASDFASDFASDF"));
+            Assert.False(await refService.IsValidReferralCode("%&/()"));
+            Assert.False(await refService.IsValidReferralCode("12345!")); 
         }
 
         [Fact]
-        public void SameReferralCodePerUser()
+        public async void ValidateReferralCode()
         {
-            string code1 = _ref.GetUserReferralCode(defaultUid);
-            string code2 = _ref.GetUserReferralCode(defaultUid);
+            string code = await refService.GetUserReferralCode(defaultUid);
+
+            Assert.True(await refService.IsValidReferralCode(code));
+        }
+
+        [Fact]
+        public async void SameReferralCodePerUser()
+        {
+            string code1 = await refService.GetUserReferralCode(defaultUid);
+            string code2 = await refService.GetUserReferralCode(defaultUid);
 
             Assert.Equal(code1, code2);
             Assert.Equal(6, code1.Length);
         }
 
         [Fact]
-        public void UniqueReferralPerUser()
+        public async void UniqueReferralPerUser()
         {
-            string code1 = _ref.GetUserReferralCode(defaultUid);
-            string code2 = _ref.GetUserReferralCode("uid456");
-            string code3 = _ref.GetUserReferralCode(defaultUid);
+            string code1 = await refService.GetUserReferralCode(defaultUid);
+            string code2 = await refService.GetUserReferralCode("uid456");
+            string code3 = await refService.GetUserReferralCode(defaultUid);
 
             Assert.NotEqual(code1, code2);
             Assert.Equal(code1, code3);
         }
 
         [Fact]
-        public void AddingListingReferrals()
+        public async void EmptyListingReferrals()
         {
             bool success;
-            IEnumerable<Referral> refs = _ref.GetUserReferrals(defaultUid);
+            IEnumerable<Referral> refs = await refService.GetUserReferrals("INVALID");
+
+            Assert.Empty(refs);
+        }
+            [Fact]
+        public async void AddingAndListingReferrals()
+        {
+            bool success;
+            IEnumerable<Referral> refs = await refService.GetUserReferrals(defaultUid);
 
             Assert.Empty(refs);
 
-            success = _ref.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.SMS, refCode));
-            refs = _ref.GetUserReferrals(defaultUid);
+            success = await refService.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.SMS, refCode));
+            refs = await refService.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 1);
 
-            success = _ref.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.EMAIL, refCode));
-            refs = _ref.GetUserReferrals(defaultUid);
+            success = await refService.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.EMAIL, refCode));
+            refs = await refService.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 2);
 
-            success = _ref.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.SHARE, refCode));
-            refs = _ref.GetUserReferrals(defaultUid);
+            success = await refService.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.SHARE, refCode));
+            refs = await refService.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 3);
 
 
             //adding the same referral should NOT really add it
-            success = _ref.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.EMAIL, refCode));
+            success = await refService.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.EMAIL, refCode));
             Assert.False(success);
 
-            refs = _ref.GetUserReferrals(defaultUid);
+            refs = await refService.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 3); //the number keeps the same 3 items
         }
 
         [Fact]
-        public void VeryInviteMessageSMS()
+        public async void VeryInviteMessageSMS()
         {
-            string msg = _ref.PrepareMessage(ReferralMethod.SMS, refCode);
+            string msg = await refService.PrepareMessage(ReferralMethod.SMS, refCode);
 
             Assert.True(msg.Substring(0, 4) == "Hi! ");
         }
 
         [Fact]
-        public void VeryInviteMessageOtherApps()
+        public async void VeryInviteMessageOtherApps()
         {
-            string msg = _ref.PrepareMessage(ReferralMethod.SHARE, refCode);
+            string msg = await refService.PrepareMessage(ReferralMethod.SHARE, refCode);
 
             Assert.True(msg.Substring(0, 4) == "Hey\n");
         }
 
         [Fact]
-        public void ReferredPersonWorks()
+        public async void ReferredPersonWorks()
         {
             Referral refA = new Referral(defaultUid, "Jose", ReferralMethod.SMS, refCode);
-            _ref.AddReferral(refA);
+            bool success = await refService.AddReferral(refA);
 
-            Referral ?refB = _ref.GetReferral(refCode);
-
+            Referral ?refB = await refService.GetReferral(refCode);
             Assert.Equal(refA, refB);
-            
         }
 
         [Fact]
-        public void NonReferredPersonWorks()
+        public async void NonReferredPersonWorks()
         {
-            Referral? refB = _ref.GetReferral(refCode);
+            Referral? refB = await refService.GetReferral(refCode);
 
             Assert.True(refB == null);
         }
+
+        [Fact]
+        public async void UpdatingReferralWorks()
+        {
+            Referral refA = new Referral(defaultUid, "Jose", ReferralMethod.SMS, refCode);
+            bool success = await refService.AddReferral(refA);
+
+            success  = await refService.UpdateReferral(refA.ReferralCode, ReferralStatus.STARTED);
+            Referral? refB = await refService.GetReferral(refCode);
+
+            Assert.NotNull(refB);
+            Assert.True(refB.Status == ReferralStatus.STARTED);
+
+            success = await refService.UpdateReferral(refA.ReferralCode, ReferralStatus.COMPLETED);
+            Referral? refC = await refService.GetReferral(refCode);
+
+            Assert.NotNull(refC);
+            Assert.True(refC.Status == ReferralStatus.COMPLETED);
+        }
     }
 }
-/*
- TODO MGG - add this tests
-- test for invalid referral codes (e.g., abc123, A1B2C3D4).
-- test for GetUserReferrals when UID is unknown.
-- test for GetUserReferralCode when UID is null or empty.
-- test for PrepareMessage with invalid enum values.
-*/

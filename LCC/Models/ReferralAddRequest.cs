@@ -31,9 +31,4 @@
             return $"{field} cannot be null or empty";
         }
     }
-    public class PrepareMessageRequest
-    {
-        public ReferralMethod Method { get; set; }
-        public string ReferralCode { get; set; } = string.Empty;
-    }
 }

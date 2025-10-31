@@ -5,7 +5,6 @@ using System.Reflection.Metadata;
 
 namespace LCC.Controllers
 {
-    //TODO MGG  - Add ASYNC/AWAIT and error handling (try/catch)
     /// <summary>
     /// Referral Controller that exposes REST endpoints 
     /// </summary>
@@ -28,7 +27,7 @@ namespace LCC.Controllers
         /// <param name="uid"></param>
         /// <returns></returns>
         [HttpGet("referrals/code/{uid}")]
-        public ActionResult<string> GetReferralCode(string uid)
+        public async Task<ActionResult<string>> GetReferralCode(string uid)
         {
             if (string.IsNullOrEmpty(uid))
             {
@@ -36,12 +35,12 @@ namespace LCC.Controllers
                 log.error(msg);
                 return BadRequest(msg);
             }
-            var code = referralService.GetUserReferralCode(uid);
+            var code = await referralService.GetUserReferralCode(uid);
             return Ok(code);
         }
 
         [HttpGet("referrals/list/{uid}")]
-        public ActionResult<IEnumerable<Referral>> GetReferrals(string uid)
+        public async Task<ActionResult<IEnumerable<Referral>>> GetReferrals(string uid)
         {
             if (string.IsNullOrEmpty(uid))
             {
@@ -49,12 +48,12 @@ namespace LCC.Controllers
                 log.error(msg);
                 return BadRequest(msg);
             }
-            var referrals = referralService.GetUserReferrals(uid);
+            var referrals = await referralService.GetUserReferrals(uid);
             return Ok(referrals);
         }
 
         [HttpPost("referrals")]
-        public ActionResult<bool> AddReferral([FromBody] ReferralAddRequest request)
+        public async Task<ActionResult<bool>> AddReferral([FromBody] ReferralAddRequest request)
         {
             string errorMsg = request.validate();
 
@@ -65,19 +64,19 @@ namespace LCC.Controllers
                 return BadRequest(errorMsg);
             }
 
-            if(!referralService.IsValidReferralCode(request.ReferralCode))
+            if(!await referralService.IsValidReferralCode(request.ReferralCode))
             {
                 var msg = $"Invalid referral code: {request.ReferralCode}";
                 log.error(msg);
                 return BadRequest(msg);
             }
 
-            bool result = referralService.AddReferral(new Referral( request.Uid, request.Name, request.Method, request.ReferralCode));
+            bool result = await referralService.AddReferral(new Referral( request.Uid, request.Name, request.Method, request.ReferralCode));
             return Ok(result);
         }
 
-        [HttpGet("referrals/msg")]
-        public ActionResult<string> PrepareMessage([FromQuery] string method, [FromQuery] string referralCode)
+        [HttpGet("referrals/invite-msg")]
+        public async Task<ActionResult<string>> PrepareMessage([FromQuery] string method, [FromQuery] string referralCode)
         {
             if (!Enum.TryParse<ReferralMethod>(method, true, out var rm))
             {
@@ -86,20 +85,20 @@ namespace LCC.Controllers
                 return BadRequest(msg);
             }
 
-            if (!referralService.IsValidReferralCode(referralCode))
+            if (!await referralService.IsValidReferralCode(referralCode))
             {
                 var msg = $"Invalid referral code: {referralCode}";
                 log.error(msg);
                 return BadRequest(msg);
             }
 
-            return Ok(referralService.PrepareMessage(rm, referralCode));
+            return Ok(await referralService.PrepareMessage(rm, referralCode));
         }
 
-        [HttpGet("referrals/{refCode}")]
-        public ActionResult<string> GetReferral(string referralCode)
+        [HttpGet("referrals/{referralCode}")]
+        public async Task<ActionResult<string>> GetReferral(string referralCode)
         {
-            if (!referralService.IsValidReferralCode(referralCode))
+            if (!await referralService.IsValidReferralCode(referralCode))
             {
                 var msg = $"Invalid referral code: {referralCode}";
                 log.error(msg);
@@ -107,6 +106,26 @@ namespace LCC.Controllers
             }
 
             return Ok(referralService.GetReferral(referralCode));
+        }
+
+        [HttpPut("referrals/{referralCode}")]
+        public async Task<ActionResult<string>> UpdateReferral(string referralCode, [FromQuery] string status)
+        {
+            if (!Enum.TryParse<ReferralStatus>(status, true, out var rs))
+            {
+                var msg = $"Invalid referral status: {status}";
+                log.error(msg);
+                return BadRequest(msg);
+            }
+
+            if (!await referralService.IsValidReferralCode(referralCode))
+            {
+                var msg = $"Invalid referral code: {referralCode}";
+                log.error(msg);
+                return BadRequest(msg);
+            }
+
+            return Ok(referralService.UpdateReferral(referralCode, rs));
         }
     }
 }
