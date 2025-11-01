@@ -152,7 +152,7 @@ namespace LCC.Controllers
         }
 
         [HttpGet("referrals/{referralCode}")]
-        public async Task<ActionResult<Referral>> GetReferral(string referralCode)
+        public async Task<ActionResult<Referral>> GetReferral(string referralCode, string name)
         {
             try
             {
@@ -165,7 +165,7 @@ namespace LCC.Controllers
                     return BadRequest(msg);
                 }
 
-                var referral = await referralService.GetReferral(referralCode);
+                var referral = await referralService.GetReferral(referralCode,  name);
                 return Ok(referral);
             }
             catch (Exception ex)
@@ -176,7 +176,7 @@ namespace LCC.Controllers
         }
 
         [HttpPut("referrals/{referralCode}")]
-        public async Task<ActionResult<bool>> UpdateReferral(string referralCode, [FromQuery] string status)
+        public async Task<ActionResult<bool>> UpdateReferral(string referralCode, [FromQuery] string name, [FromQuery] string status)
         {
             if (!Enum.TryParse<ReferralStatus>(status, true, out var rs))
             {
@@ -196,7 +196,7 @@ namespace LCC.Controllers
                     return BadRequest(msg);
                 }
 
-                bool succeeded = await referralService.UpdateReferral(referralCode, rs);
+                bool succeeded = await referralService.UpdateReferral(referralCode, name, rs);
 
                 return Ok(succeeded);
             }

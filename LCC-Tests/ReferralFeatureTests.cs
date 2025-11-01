@@ -10,6 +10,7 @@ namespace LCC.Tests
         IReferralFeatures refService ;
         string defaultUid = "uid123";
         string refCode = "A1B2C3";
+        string referralName = "Jose";
 
         public ReferralFeatureTests()
         {
@@ -67,25 +68,27 @@ namespace LCC.Tests
         public async void AddingAndListingReferrals()
         {
             bool success;
+            
+            refService.ClearUserReferrals(defaultUid);
             IEnumerable<Referral> refs = await refService.GetUserReferrals(defaultUid);
 
             Assert.Empty(refs);
 
-            success = await refService.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.SMS, refCode));
+            success = await refService.AddReferral(new Referral(defaultUid, referralName, Models.ReferralMethod.SMS, refCode));
             refs = await refService.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 1);
 
-            success = await refService.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.EMAIL, refCode));
+            success = await refService.AddReferral(new Referral(defaultUid, referralName, Models.ReferralMethod.EMAIL, refCode));
             refs = await refService.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 2);
 
-            success = await refService.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.SHARE, refCode));
+            success = await refService.AddReferral(new Referral(defaultUid, referralName, Models.ReferralMethod.SHARE, refCode));
             refs = await refService.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 3);
 
 
             //adding the same referral should NOT really add it
-            success = await refService.AddReferral(new Referral(defaultUid, "Jose", Models.ReferralMethod.EMAIL, refCode));
+            success = await refService.AddReferral(new Referral(defaultUid, referralName, Models.ReferralMethod.EMAIL, refCode));
             Assert.False(success);
 
             refs = await refService.GetUserReferrals(defaultUid);
@@ -111,17 +114,19 @@ namespace LCC.Tests
         [Fact]
         public async void ReferredPersonWorks()
         {
-            Referral refA = new Referral(defaultUid, "Jose", ReferralMethod.SMS, refCode);
+
+            Referral refA = new Referral(defaultUid, referralName, ReferralMethod.SMS, refCode);
             bool success = await refService.AddReferral(refA);
 
-            Referral ?refB = await refService.GetReferral(refCode);
+            Referral ?refB = await refService.GetReferral(refCode, referralName);
             Assert.Equal(refA, refB);
         }
 
         [Fact]
         public async void NonReferredPersonWorks()
         {
-            Referral? refB = await refService.GetReferral(refCode);
+            refService.ClearUserReferrals(defaultUid);
+            Referral? refB = await refService.GetReferral(refCode, referralName);
 
             Assert.True(refB == null);
         }
@@ -129,17 +134,17 @@ namespace LCC.Tests
         [Fact]
         public async void UpdatingReferralWorks()
         {
-            Referral refA = new Referral(defaultUid, "Jose", ReferralMethod.SMS, refCode);
+            Referral refA = new Referral(defaultUid, referralName, ReferralMethod.SMS, refCode);
             bool success = await refService.AddReferral(refA);
 
-            success  = await refService.UpdateReferral(refA.ReferralCode, ReferralStatus.STARTED);
-            Referral? refB = await refService.GetReferral(refCode);
+            success  = await refService.UpdateReferral(refA.ReferralCode, referralName, ReferralStatus.STARTED);
+            Referral? refB = await refService.GetReferral(refCode, referralName);
 
             Assert.NotNull(refB);
             Assert.True(refB.Status == ReferralStatus.STARTED);
 
-            success = await refService.UpdateReferral(refA.ReferralCode, ReferralStatus.COMPLETED);
-            Referral? refC = await refService.GetReferral(refCode);
+            success = await refService.UpdateReferral(refA.ReferralCode, referralName, ReferralStatus.COMPLETED);
+            Referral? refC = await refService.GetReferral(refCode, referralName);
 
             Assert.NotNull(refC);
             Assert.True(refC.Status == ReferralStatus.COMPLETED);

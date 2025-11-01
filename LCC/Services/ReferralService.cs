@@ -7,8 +7,8 @@ namespace LCC.Services
 {
     public class ReferralService : IReferralFeatures
     {
-        readonly List<UserPartial> _users = new List<UserPartial>();
-        readonly Dictionary<string, List<Referral>> referralerralsByUid = new Dictionary<string, List<Referral>>();
+        static readonly List<UserPartial> _users = new List<UserPartial>();
+        static readonly Dictionary<string, List<Referral>> referralerralsByUid = new Dictionary<string, List<Referral>>();
         ILog log;
 
         public ReferralService(ILog logger)
@@ -59,6 +59,13 @@ namespace LCC.Services
             });
         }
 
+        public void ClearUserReferrals(string uid)
+        {
+            if (referralerralsByUid.TryGetValue(uid, out var referrals))
+            {
+                referrals.Clear(); // Clears the list in-place
+            }
+        }
         /// <summary>
         /// prepare a unique referral code for the same UID always (generated once, kept in UserPartial)
         /// </summary>
@@ -97,7 +104,8 @@ namespace LCC.Services
 
             return await Task.Run(() =>
             {
-                log.info($"Adding referral...");
+                log.info($"Adding referral...{uid}");
+
                 //Is the first referral for the user
                 if (!referralerralsByUid.ContainsKey(uid))
                     referralerralsByUid[uid] = new List<Referral>();
@@ -125,10 +133,10 @@ namespace LCC.Services
             });
         }
 
-        public async Task<bool> UpdateReferral(string referralCode, ReferralStatus newStatus)
+        public async Task<bool> UpdateReferral(string referralCode, string name, ReferralStatus newStatus)
         {
             bool success = false;
-            Referral ?referral = await GetReferral(referralCode);
+            Referral ?referral = await GetReferral(referralCode, name);
 
             return await Task.Run(() =>
             {
@@ -149,13 +157,13 @@ namespace LCC.Services
             });
         }
 
-        public async Task<Referral?> GetReferral(string referralCode)
+        public async Task<Referral?> GetReferral(string referralCode, string name)
         {
             return await Task.Run(() =>
             {
                 Referral? referral = referralerralsByUid
                                 .SelectMany(kvp => kvp.Value)
-                                .FirstOrDefault(r => r.ReferralCode == referralCode);
+                                .FirstOrDefault(r => r.ReferralCode == referralCode && r.Name == name);
 
                 return referral;
             });
