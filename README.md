@@ -1,15 +1,19 @@
 # Livefront Coding Challenge
 
-This repository contains a Referral endpoint that allows to
-- GetUserReferralCode
-- IsValidReferralCode
-- GetUserReferrals
-- AddReferral
-- PrepareMessage
-- GetReferral
-- UpdateReferral
+## LCC - Tech Notes
 
-Those are NOT the name of the endpoints, but the functional names, when you run the project in development mode you will get the actual endpoint details
+- Clean Architecture implemented (Domain, Infrastructure, Application, Api)
+- Separation of Concerns
+- InMemory Entity Framework (with seeded data)
+- Unit Testing (of service and actual endpoints)
+- DTO and Fluent Validation
+- Repository Pattern
+- Dependency Injection
+- Interface Segregation applied
+- DRY
+- SOLID
+- Logging 
+
 
 ## SETUP
 
@@ -28,31 +32,23 @@ Restore packages and build
 
 To run tests 
 - dotnet test
-- dotnet run --project LCC/LCC.csproj
+- dotnet run --project LCC/API.csproj
 
 Open 
 - http://localhost:5097/swagger/index.html
 
 To check test coverage
+----------------------
 
-dotnet test Tests.csproj --property:CollectCoverage=true --property:CoverletOutputFormat=cobertura
+Install the report generator only once
+```dotnet tool install --global dotnet-reportgenerator-globaltool```
+
+When first time or when new tests are added
+
+Generate the XML coverage report ()
+```$dotnet test --collect:"XPlat Code Coverage" ```
+
+Convert that code to html(when new tests are added)
+```$reportgenerator -reports:TestResults/**/coverage.cobertura.xml -targetdir:coverage-report -reporttypes:Html```
 
 
-## OVERVIEW
-There are two projects
-- **LCC** - is where the actual endpoint logic lives (controller, services, models)
-- **LCC-Tests** - unit tests for the services
-
-
-## LCC - Tech Notes
-
-- Async/Await and Try/Catch with logger implementation
-
-- Idiomatica RESTful API that covers all the logic needed by the mobile application
-
-- A **UserService** could have been implemented specially to get the ReferralCode everything kept on the same controller to simply implementation and code review
-- Logging has been implemented with usage of **Ilog** interface and a concrete **ConsoleLogger**
-- **ReferralService** keeps the referral data in memory to simplify implementation and focus on the actual API, than on storying the data in a database or other persistence
-- Since **Dependency injection** is being used and the controller depends on **IReferralFeatures** 
-this means that another Service could be implemented and injected to actually store and retrieve referrals on a SQL Database or NoSQL database
-- That also means that another type of logger could be used (PlainTextLogger, EmailLogger, DatabaseLogger, CloudLogger)
