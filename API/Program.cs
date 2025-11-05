@@ -2,10 +2,14 @@
 using Application.Interfaces;
 using Application.Services;
 using Application.Validators;
+using Domain;
 using Domain.Interfaces;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Infrastructure;
+using Infrastructure.Repository;
+using Microsoft.EntityFrameworkCore;
+using System.Configuration;
 
 namespace API
 {
@@ -17,7 +21,16 @@ namespace API
 
             // Add services to the container.
             builder.Services.AddScoped<ILog, ConsoleLogger>();
+            builder.Services.AddScoped<IUtilFeatures, UtilService>();
             builder.Services.AddScoped<IReferralFeatures, ReferralService>();
+            builder.Services.AddScoped<IRepository<User>, UserRepository>();
+            builder.Services.AddScoped<IRepository<Referral>, ReferralRepository>();
+            
+            builder.Services.AddDbContext<ReferralDbContext>(options =>
+            options.UseInMemoryDatabase("ReferralDb"));
+            
+            builder.Services.AddScoped<ExceptionHandlingMiddleware>();
+
             builder.Services.AddControllers();
 
             
@@ -41,8 +54,6 @@ namespace API
             {
                 app.UseHsts();
             }
-
-            app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.UseHttpsRedirection();
 

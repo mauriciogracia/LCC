@@ -1,23 +1,23 @@
 ﻿using Domain.Interfaces;
+using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 
 namespace API
 {
-    public class ExceptionHandlingMiddleware
+    public class ExceptionHandlingMiddleware : IMiddleware
     {
-        private readonly RequestDelegate _next;
         private readonly ILog _log;
 
-        public ExceptionHandlingMiddleware(RequestDelegate next, ILog log)
+        public ExceptionHandlingMiddleware(ILog log)
         {
-            _next = next;
             _log = log;
         }
 
-        public async Task Invoke(HttpContext context)
+        public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
             try
             {
-                await _next(context);
+                await next(context);
             }
             catch (Exception ex)
             {
