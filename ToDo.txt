@@ -17,8 +17,7 @@ DONE
 	X Cover edge cases
 	X Check invalid inputs
 
------------
 6. Complete Functional Endpoints: 
-- Add statistics
-- and deep-link metadata flows to align with product spec.
-X REFERRAL code validation endpoint 
+	X Add statistics
+	X and deep-link metadata flows to align with product spec.
+	X REFERRAL code validation endpoint 

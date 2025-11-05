@@ -8,12 +8,14 @@ using Moq;
 
 namespace Tests
 {
+    
     public class ReferralsControllerTests
     {
         readonly ReferralsController controller;
         readonly Mock<IReferralFeatures> referralMock = new();
         readonly Mock<IUtilFeatures> utilMock = new();
         readonly Mock<ILog> logMock = new();
+        string defaultUid = "U1";
 
         public ReferralsControllerTests()
         {
@@ -24,7 +26,7 @@ namespace Tests
         [Fact]
         public async Task GetReferralCode_ValidUid_ReturnsCode()
         {
-            string uid = "U1";
+            string uid = defaultUid;
             referralMock.Setup(r => r.GetUserReferralCode(uid)).ReturnsAsync("ABC123");
 
             var result = await controller.GetReferralCode(uid);
@@ -60,9 +62,9 @@ namespace Tests
         [Fact]
         public async Task GetReferrals_ValidUid_ReturnsList()
         {
-            referralMock.Setup(r => r.GetUserReferrals("U1")).ReturnsAsync([new("U1", "Jose", ReferralMethod.EMAIL, "A1B2C3")]);
+            referralMock.Setup(r => r.GetUserReferrals(defaultUid)).ReturnsAsync([new(defaultUid, "Jose", ReferralMethod.EMAIL, "A1B2C3")]);
 
-            var result = await controller.GetReferrals("U1");
+            var result = await controller.GetReferrals(defaultUid);
             var ok = Assert.IsType<OkObjectResult>(result.Result);
             var list = Assert.IsAssignableFrom<IEnumerable<Referral>>(ok.Value);
             Assert.Single(list);
@@ -80,7 +82,7 @@ namespace Tests
         [Fact]
         public async Task AddReferral_ValidRequest_ReturnsTrue()
         {
-            var req = new ReferralAddRequest { Uid = "U1", Name = "Jose", Method = ReferralMethod.EMAIL, ReferralCode = "A1B2C3" };
+            var req = new ReferralAddRequest { Uid = defaultUid, Name = "Jose", Method = ReferralMethod.EMAIL, ReferralCode = "A1B2C3" };
             utilMock.Setup(u => u.IsValidReferralCode(req.ReferralCode)).Returns(true);
             referralMock.Setup(r => r.AddReferral(It.IsAny<Referral>())).ReturnsAsync(true);
 
@@ -95,7 +97,7 @@ namespace Tests
         [Fact]
         public async Task AddReferral_InvalidCode_ReturnsBadRequest()
         {
-            var req = new ReferralAddRequest { Uid = "U1", Name = "Jose", Method = ReferralMethod.EMAIL, ReferralCode = "XYZ" };
+            var req = new ReferralAddRequest { Uid = defaultUid, Name = "Jose", Method = ReferralMethod.EMAIL, ReferralCode = "XYZ" };
             utilMock.Setup(u => u.IsValidReferralCode(req.ReferralCode)).Returns(false);
 
             var result = await controller.AddReferral(req);
@@ -146,7 +148,7 @@ namespace Tests
         {
             var req = new GetReferralRequest { ReferralCode = "A1B2C3", Name = "Jose" };
             utilMock.Setup(u => u.IsValidReferralCode(req.ReferralCode)).Returns(true);
-            referralMock.Setup(r => r.GetReferral(req.ReferralCode, req.Name)).ReturnsAsync(new Referral("U1", "Jose", ReferralMethod.EMAIL, "A1B2C3"));
+            referralMock.Setup(r => r.GetReferral(req.ReferralCode, req.Name)).ReturnsAsync(new Referral(defaultUid, "Jose", ReferralMethod.EMAIL, "A1B2C3"));
 
             var result = await controller.GetReferral(req);
             var ok = Assert.IsType<OkObjectResult>(result.Result);
@@ -164,5 +166,95 @@ namespace Tests
             var result = await controller.GetReferral(req);
             Assert.IsType<BadRequestObjectResult>(result.Result);
         }
+
+        /** tests for statistics endpoints */
+        [Fact]
+        public async Task GetReferralStats_ValidUid_ReturnsStats()
+        {
+            var expectedStats = new ReferralStatistics
+            {
+                Uid = defaultUid,
+                TotalSent = 5,
+                TotalCompleted = 3,
+            };
+
+            referralMock.Setup(r => r.GetReferralStatistics(defaultUid)).ReturnsAsync(expectedStats);
+
+            var result = await controller.GetReferralStats(defaultUid);
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            var stats = Assert.IsType<ReferralStatistics>(ok.Value);
+
+            Assert.Equal(defaultUid, stats.Uid);
+            Assert.Equal(5, stats.TotalSent);
+            Assert.Equal(3, stats.TotalCompleted);
+            Assert.Equal(2, stats.TotalPending);
+        }
+
+        [Fact]
+        public async Task GetReferralStats_EmptyUid_ReturnsDefaultStats()
+        {
+            referralMock.Setup(r => r.GetReferralStatistics(defaultUid)).ReturnsAsync(new ReferralStatistics());
+
+            var result = await controller.GetReferralStats(defaultUid);
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            var stats = Assert.IsType<ReferralStatistics>(ok.Value);
+
+            Assert.Equal("", stats.Uid);
+            Assert.Equal(0, stats.TotalSent);
+            Assert.Equal(0, stats.TotalCompleted);
+            Assert.Equal(0, stats.TotalPending);
+        }
+
+        [Fact]
+        public async Task GetReferralStats_NullUid_ReturnsDefaultStats()
+        {
+            referralMock.Setup(r => r.GetReferralStatistics("")).ReturnsAsync(new ReferralStatistics());
+
+            var result = await controller.GetReferralStats("");
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            var stats = Assert.IsType<ReferralStatistics>(ok.Value);
+
+            Assert.Equal(0, stats.TotalSent);
+            Assert.Equal(0, stats.TotalCompleted);
+            Assert.Equal(0, stats.TotalPending);
+        }
+
+        [Fact]
+        public async Task GetReferralStats_NoReferrals_ReturnsZeroStats()
+        {
+            referralMock.Setup(r => r.GetReferralStatistics(defaultUid)).ReturnsAsync(new ReferralStatistics
+            {
+                Uid = defaultUid,
+                TotalSent = 0,
+                TotalCompleted = 0
+            });
+
+            var result = await controller.GetReferralStats(defaultUid);
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            var stats = Assert.IsType<ReferralStatistics>(ok.Value);
+
+            Assert.Equal(defaultUid, stats.Uid);
+            Assert.Equal(0, stats.TotalSent);
+            Assert.Equal(0, stats.TotalCompleted);
+            Assert.Equal(0, stats.TotalPending);
+        }
+
+        [Fact]
+        public async Task GetReferralStats_AllCompleted_ReturnsZeroPending()
+        {
+            referralMock.Setup(r => r.GetReferralStatistics(defaultUid)).ReturnsAsync(new ReferralStatistics
+            {
+                Uid = defaultUid,
+                TotalSent = 4,
+                TotalCompleted = 4
+            });
+
+            var result = await controller.GetReferralStats(defaultUid);
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            var stats = Assert.IsType<ReferralStatistics>(ok.Value);
+
+            Assert.Equal(0, stats.TotalPending);
+        }
+
     }
 }

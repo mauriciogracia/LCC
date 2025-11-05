@@ -7,7 +7,6 @@ namespace Application.Interfaces
     {
         string PrepareReferralCode(string uid);
         bool IsValidReferralCode(string code);
-
         string PrepareMessage(ReferralMethod method, string referralCode);
 
     }

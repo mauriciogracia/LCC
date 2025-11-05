@@ -1,8 +1,6 @@
 ﻿using Application.Interfaces;
 using Domain;
 using Domain.Interfaces;
-using System.Text.RegularExpressions;
-using System.Xml.Schema;
 
 namespace Application.Services
 {
@@ -147,5 +145,18 @@ namespace Application.Services
             return result;
         }
 
+        public async Task<ReferralStatistics> GetReferralStatistics(string uid)
+        {
+            var userReferrals = await GetReferralsByUserIdAsync(uid);
+            int completed = userReferrals.Count(r => r.Status == ReferralStatus.Completed);
+            int total = userReferrals.Count();
+
+            return new ReferralStatistics
+            {
+                Uid = uid,
+                TotalSent = total,
+                TotalCompleted = completed,
+            };
+        }
     }
 }

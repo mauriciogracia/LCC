@@ -16,5 +16,7 @@ namespace Application.Interfaces
         Task<Referral?> GetReferral(string referralCode, string name);
 
         Task<bool> UpdateReferral(string referralCode, string name, ReferralStatus newStatus);
+
+        Task<ReferralStatistics> GetReferralStatistics(string uid);
     }
 }

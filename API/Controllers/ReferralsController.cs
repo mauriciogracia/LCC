@@ -136,5 +136,11 @@ namespace API.Controllers
             return Ok(succeeded);
         }
 
+        [HttpGet("referrals/stats")]
+        public async Task<ActionResult<ReferralStatistics>> GetReferralStats([FromQuery] string uid)
+        {
+            var stats = await referrals.GetReferralStatistics(uid);
+            return Ok(stats);
+        }
     }
 }
