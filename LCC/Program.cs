@@ -1,6 +1,8 @@
 
 using Application.Interfaces;
 using Application.Services;
+using Domain;
+using Infrastructure;
 
 namespace API
 {
@@ -11,6 +13,7 @@ namespace API
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Services.AddScoped<ILog, ConsoleLogger>();
             builder.Services.AddScoped<IReferralFeatures, ReferralService>();
             builder.Services.AddControllers();
 
