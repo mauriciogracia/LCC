@@ -31,7 +31,7 @@
             Name = name;
             ReferralCode = referralCode;
             Method = method;    
-            Status = ReferralStatus.PENDING;
+            Status = ReferralStatus.Pending;
             CreatedAt = DateTime.UtcNow;
         }
 

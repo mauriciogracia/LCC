@@ -11,11 +11,11 @@ namespace Tests
     public class ReferralServiceTests
     {
         readonly ILog _log ;
-        IReferralFeatures referrals ;
-        IUtilFeatures util;
-        string defaultUid = "U1";
-        string refCode = "A1B2C3";
-        string referralName = "Jose";
+        readonly IReferralFeatures referrals ;
+        readonly IUtilFeatures util;
+        readonly string defaultUid = "U1";
+        readonly string refCode = "A1B2C3";
+        readonly string referralName = "Jose";
 
         public ReferralServiceTests()
         {
@@ -154,17 +154,17 @@ namespace Tests
             Referral refA = new Referral(defaultUid, referralName, ReferralMethod.SMS, refCode);
             bool success = await referrals.AddReferral(refA);
 
-            success  = await referrals.UpdateReferral(refA.ReferralCode, referralName, ReferralStatus.STARTED);
+            success  = await referrals.UpdateReferral(refA.ReferralCode, referralName, ReferralStatus.Started);
             Referral? refB = await referrals.GetReferral(refCode, referralName);
 
             Assert.NotNull(refB);
-            Assert.True(refB.Status == ReferralStatus.STARTED);
+            Assert.True(refB.Status == ReferralStatus.Started);
 
-            success = await referrals.UpdateReferral(refA.ReferralCode, referralName, ReferralStatus.COMPLETED);
+            success = await referrals.UpdateReferral(refA.ReferralCode, referralName, ReferralStatus.Completed);
             Referral? refC = await referrals.GetReferral(refCode, referralName);
 
             Assert.NotNull(refC);
-            Assert.True(refC.Status == ReferralStatus.COMPLETED);
+            Assert.True(refC.Status == ReferralStatus.Completed);
         }
     }
 }

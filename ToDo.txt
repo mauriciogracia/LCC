@@ -22,5 +22,5 @@ Use FluentValidation or similar tools for clean input contracts.
 -----------
 6. Complete Functional Endpoints: 
 - Add statistics
-X REFERRAL code validation endpoint 
 - and deep-link metadata flows to align with product spec.
+X REFERRAL code validation endpoint 

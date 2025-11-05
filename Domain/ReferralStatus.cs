@@ -2,8 +2,8 @@
 {
     public enum ReferralStatus
     {
-        PENDING,
-        STARTED,
-        COMPLETED
+        Pending,
+        Started,
+        Completed
     }
 }
