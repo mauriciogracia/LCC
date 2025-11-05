@@ -1,18 +1,5 @@
 ﻿namespace Domain
 {
-    public enum ReferralMethod
-    {
-        SMS,
-        EMAIL,
-        SHARE
-    }
-    public enum ReferralStatus
-    {
-        PENDING,
-        STARTED,
-        COMPLETED
-    }
-
     public class Referral : IEquatable<Referral>
     {
         public string ReferralId { get; set; }

@@ -5,9 +5,11 @@
     /// 
     /// For the given scope I only need a "key-value" like this one
     /// </summary>
-    public class UserPartial
+    public class User
     {
         public string Uid { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;   
         public string ReferralCode { get; set; } = string.Empty;
     }
 }
