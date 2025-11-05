@@ -97,12 +97,24 @@ namespace Tests
         [Fact]
         public async Task AddReferral_InvalidCode_ReturnsBadRequest()
         {
-            var req = new ReferralAddRequest { Uid = defaultUid, Name = "Jose", Method = ReferralMethod.EMAIL, ReferralCode = "XYZ" };
+            var req = new ReferralAddRequest
+            {
+                Uid = defaultUid,
+                Name = "Jose",
+                Method = ReferralMethod.EMAIL,
+                ReferralCode = "XYZ"
+            };
+
             utilMock.Setup(u => u.IsValidReferralCode(req.ReferralCode)).Returns(false);
 
+            //Under unit testing the model state is valid by default - needs to be mark as dirty
+            controller.ModelState.AddModelError("ReferralCode", "Invalid referral code");
+
             var result = await controller.AddReferral(req);
+
             Assert.IsType<BadRequestObjectResult>(result.Result);
         }
+
 
         // PrepareMessage validate correct referral code when preparing a message
         [Fact]

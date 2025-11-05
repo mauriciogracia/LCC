@@ -99,9 +99,6 @@ namespace Application.Services
             bool success = false;
             string uid = referral.Uid;
 
-            
-
-              
             var refExists = await referrals.GetByFilterAsync(r => r.Name == referral.Name && r.Method == referral.Method);
 
             if (refExists.Any())
@@ -158,5 +155,23 @@ namespace Application.Services
                 TotalCompleted = completed,
             };
         }
+
+        public async Task<bool> AttributeReferral(string referralCode, string refereeUid)
+        {
+            var referee = await users.GetByIdAsync(refereeUid);
+
+            if (referee == null)
+            {
+                log.error($"Referee not found: {refereeUid}");
+                return false;
+            }
+
+            referee.ReferralCode = referralCode;
+            await users.UpdateAsync(referee);
+
+            log.info($"Referral code {referralCode} attributed to user {refereeUid}");
+            return true;
+        }
+
     }
 }

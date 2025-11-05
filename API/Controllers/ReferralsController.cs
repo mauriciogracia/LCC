@@ -75,14 +75,8 @@ namespace API.Controllers
         [HttpPost("referrals")]
         public async Task<ActionResult<bool>> AddReferral([FromBody] ReferralAddRequest request)
         {
-            //TODO MGG - can be moved to fluent validation ?
-            bool isValidCode = util.IsValidReferralCode(request.ReferralCode);
-
-            if (!isValidCode)
-            {
-                var msg = $"Invalid referral code: {request.ReferralCode}";
-                log.error(msg);
-                return BadRequest(msg);
+            if (!ModelState.IsValid) { 
+                return BadRequest(ModelState);
             }
 
             bool result = await referrals.AddReferral(new Referral(request.Uid, request.Name, request.Method, request.ReferralCode));
@@ -141,6 +135,13 @@ namespace API.Controllers
         {
             var stats = await referrals.GetReferralStatistics(uid);
             return Ok(stats);
+        }
+
+        [HttpPost("attribute")]
+        public async Task<ActionResult<bool>> AttributeReferral([FromBody] ReferralAttributionRequest request)
+        {
+            var result = await referrals.AttributeReferral(request.ReferralCode, request.RefereeUid);
+            return Ok(result);
         }
     }
 }
