@@ -1,6 +1,7 @@
 ﻿using Application.DTO;
 using Application.Interfaces;
 using Domain;
+using Domain.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Controllers
@@ -46,6 +47,11 @@ namespace Controllers
                 log.error(ex.Message);
                 return StatusCode(500, "An unexpected error occurred.");
             }
+        }
+        [HttpGet("referrals/validate/{referralCode}")]
+        public async Task<bool> ValideReferralCode(string referralCode)
+        {
+            return await referralService.IsValidReferralCode(referralCode);
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces;
 using Domain;
+using Domain.Interfaces;
 using System.Text.RegularExpressions;
 
 namespace Application.Services

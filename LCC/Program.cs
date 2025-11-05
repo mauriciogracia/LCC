@@ -1,7 +1,7 @@
 
 using Application.Interfaces;
 using Application.Services;
-using Domain;
+using Domain.Interfaces;
 using Infrastructure;
 
 namespace API
