@@ -75,6 +75,7 @@ namespace API.Controllers
         [HttpPost("referrals")]
         public async Task<ActionResult<bool>> AddReferral([FromBody] ReferralAddRequest request)
         {
+            //TODO MGG - can be moved to fluent validation ?
             bool isValidCode = util.IsValidReferralCode(request.ReferralCode);
 
             if (!isValidCode)
@@ -95,66 +96,45 @@ namespace API.Controllers
         /// <param name="referralCode"></param>
         /// <returns></returns>
         [HttpGet("referrals/invite-msg")]
-        public ActionResult<string> PrepareMessage([FromQuery] string method, [FromQuery] string referralCode)
+        public ActionResult<string> PrepareMessage([FromQuery] PrepareMessageRequest pmr)
         {
-            if (!Enum.TryParse<ReferralMethod>(method, true, out var rm))
-            {
-                var msg = $"Invalid referral method: {method}";
-                log.error(msg);
-                return BadRequest(msg);
-            }
-
-            bool isValidCode = util.IsValidReferralCode(referralCode);
+            bool isValidCode = util.IsValidReferralCode(pmr.ReferralCode);
 
             if (!isValidCode)
             {
-                var msg = $"Invalid referral code: {referralCode}";
+                var msg = $"Invalid referral code: {pmr.ReferralCode}";
                 log.error(msg);
                 return BadRequest(msg);
             }
-            var inviteMessage = util.PrepareMessage(rm, referralCode);
+            var inviteMessage = util.PrepareMessage(pmr.Method, pmr.ReferralCode);
 
             return Ok(inviteMessage);
         }
 
-        [HttpGet("referrals/{referralCode}")]
-        public async Task<ActionResult<Referral>> GetReferral(string referralCode, string name)
+        [HttpGet("referrals")]
+        public async Task<ActionResult<Referral>> GetReferral([FromQuery] GetReferralRequest grr)
         {
-            bool isValidCode = util.IsValidReferralCode(referralCode);
+            bool isValidCode = util.IsValidReferralCode(grr.ReferralCode);
 
             if (!isValidCode)
             {
-                var msg = $"Invalid referral code: {referralCode}";
+                var msg = $"Invalid referral code: {grr.ReferralCode}";
                 log.error(msg);
                 return BadRequest(msg);
             }
 
-            var referral = await referrals.GetReferral(referralCode, name);
+            var referral = await referrals.GetReferral(grr.ReferralCode, grr.Name);
             return Ok(referral);
         }
 
-        [HttpPut("referrals/{referralCode}")]
-        public async Task<ActionResult<bool>> UpdateReferral(string referralCode, [FromQuery] string name, [FromQuery] string status)
+        [HttpPut("referrals")]
+        public async Task<ActionResult<bool>> UpdateReferral([FromQuery] UpdateReferralRequest urr)
         {
-            if (!Enum.TryParse<ReferralStatus>(status, true, out var rs))
-            {
-                var msg = $"Invalid referral status: {status}";
-                log.error(msg);
-                return BadRequest(msg);
-            }
+            Enum.TryParse<ReferralStatus>(urr.Status, true, out var rs); 
 
-            bool isValidCode = util.IsValidReferralCode(referralCode);
-
-            if (!isValidCode)
-            {
-                var msg = $"Invalid referral code: {referralCode}";
-                log.error(msg);
-                return BadRequest(msg);
-            }
-
-            bool succeeded = await referrals.UpdateReferral(referralCode, name, rs);
-
+            bool succeeded = await referrals.UpdateReferral(urr.ReferralCode, urr.Name, rs);
             return Ok(succeeded);
         }
+
     }
 }

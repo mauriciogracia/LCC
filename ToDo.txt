@@ -9,9 +9,6 @@ Use EF Core or repository abstraction with in-memory or SQLite provider.
 3. Centralize Error Handling: 
 Replace per-action try/catch with global middleware and structured logs. 
 
------------
-PENDING
------------
 4. Introduce Validation and DTOs: 
 
 Use FluentValidation or similar tools for clean input contracts. 

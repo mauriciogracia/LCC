@@ -25,7 +25,8 @@ namespace API
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            builder.Services.AddValidatorsFromAssemblyContaining<PrepareMessageRequestValidator>();
+            // Add all validators
+            builder.Services.AddValidatorsFromAssembly(typeof(IValidator<>).Assembly);
             builder.Services.AddFluentValidationAutoValidation();
 
             var app = builder.Build();
