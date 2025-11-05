@@ -4,7 +4,7 @@ using Application.Interfaces;
 
 namespace Application.Validators
 {
-    public static class ReferralRules
+    public static class ReferralCommonRules
     {
         public static IRuleBuilderOptions<T, string> ReferralCodeRules<T>(
             this IRuleBuilder<T, string> rule,
@@ -22,6 +22,20 @@ namespace Application.Validators
         {
             return rule
                 .IsInEnum().WithMessage("Invalid referral method.");
+        }
+
+        public static IRuleBuilderOptions<T, string> UidRules<T>(
+            this IRuleBuilder<T, string> rule)
+        {
+            return rule
+                .NotEmpty().WithMessage("Uid cannot be null or empty");
+        }
+
+        public static IRuleBuilderOptions<T, string> NameRules<T>(
+            this IRuleBuilder<T, string> rule)
+        {
+            return rule
+                .NotEmpty().WithMessage("Name cannot be null or empty");
         }
     }
 }

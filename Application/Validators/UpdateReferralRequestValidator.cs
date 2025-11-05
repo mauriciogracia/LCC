@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using Application.DTO;
-using Application.Validators;
 using Application.Interfaces;
+using Application.Validators;
 using Domain;
 
 namespace Application.Validators
@@ -10,11 +10,8 @@ namespace Application.Validators
     {
         public UpdateReferralRequestValidator(IUtilFeatures util)
         {
-            RuleFor(x => x.ReferralCode)
-                .ReferralCodeRules(util);
-
-            RuleFor(x => x.Name)
-                .NotEmpty().WithMessage("Name cannot be empty.");
+            RuleFor(x => x.ReferralCode).ReferralCodeRules(util);
+            RuleFor(x => x.Name).NameRules();
 
             RuleFor(x => x.Status)
                 .NotEmpty().WithMessage("Status cannot be empty.")

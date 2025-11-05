@@ -8,12 +8,8 @@ namespace Application.Validators
     {
         public ReferralAddRequestValidator(IUtilFeatures util)
         {
-            RuleFor(x => x.Uid)
-                .NotEmpty().WithMessage("Uid cannot be null or empty");
-
-            RuleFor(x => x.Name)
-                .NotEmpty().WithMessage("Name cannot be null or empty");
-
+            RuleFor(x => x.Uid).UidRules();
+            RuleFor(x => x.Name).NameRules();
             RuleFor(x => x.ReferralCode).ReferralCodeRules(util);
             RuleFor(x => x.Method).ReferralMethodRules();
         }
