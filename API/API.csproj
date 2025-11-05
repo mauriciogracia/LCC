@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="LCC.sln" />
+    <None Include="API-final.sln" />
   </ItemGroup>
 
   <ItemGroup>

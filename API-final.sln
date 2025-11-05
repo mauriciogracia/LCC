@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35728.132
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API", "LCC\API.csproj", "{713B10B2-8AA4-4970-AE8D-3784F7976CE1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API", "API\API.csproj", "{713B10B2-8AA4-4970-AE8D-3784F7976CE1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "LCC-Tests\Tests.csproj", "{64E7AB8F-DDBF-4BD6-84ED-00C19F1DF985}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{64E7AB8F-DDBF-4BD6-84ED-00C19F1DF985}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{E22FDED2-E956-4FB3-8942-4BA91B554BDC}"
 EndProject
