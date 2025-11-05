@@ -1,7 +1,10 @@
 
 using Application.Interfaces;
 using Application.Services;
+using Application.Validators;
 using Domain.Interfaces;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Infrastructure;
 
 namespace API
@@ -21,6 +24,9 @@ namespace API
             // Add Swagger services
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            builder.Services.AddValidatorsFromAssemblyContaining<PrepareMessageRequestValidator>();
+            builder.Services.AddFluentValidationAutoValidation();
 
             var app = builder.Build();
 

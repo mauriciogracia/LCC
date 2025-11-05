@@ -4,7 +4,7 @@ using Domain;
 using Domain.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Controllers
+namespace API.Controllers
 {
     /// <summary>
     /// Referral Controller that exposes REST endpoints 
@@ -75,15 +75,6 @@ namespace Controllers
         [HttpPost("referrals")]
         public async Task<ActionResult<bool>> AddReferral([FromBody] ReferralAddRequest request)
         {
-            string errorMsg = request.validate();
-
-            //When validation error is found on the ReferralAddRequest
-            if (!string.IsNullOrEmpty(errorMsg))
-            {
-                log.error(errorMsg);
-                return BadRequest(errorMsg);
-            }
-
             bool isValidCode = util.IsValidReferralCode(request.ReferralCode);
 
             if (!isValidCode)
