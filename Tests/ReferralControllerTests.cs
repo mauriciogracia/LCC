@@ -72,7 +72,7 @@ namespace Tests
         [Fact]
         public async Task GetReferrals_NullUid_ReturnsBadRequest()
         {
-            var result = await controller.GetReferrals(null);
+            var result = await controller.GetReferrals("");
             Assert.IsType<BadRequestObjectResult>(result.Result);
         }
 
@@ -86,7 +86,9 @@ namespace Tests
 
             var result = await controller.AddReferral(req);
             var ok = Assert.IsType<OkObjectResult>(result.Result);
-            Assert.True((bool)ok.Value);
+
+            //Since is a possible null value
+            Assert.True(ok.Value is bool b && b);
         }
 
         // AddReferral validate invalid referral code
@@ -133,7 +135,9 @@ namespace Tests
 
             var result = await controller.UpdateReferral(req);
             var ok = Assert.IsType<OkObjectResult>(result.Result);
-            Assert.True((bool)ok.Value);
+
+            //Since is a possible null value
+            Assert.True(ok.Value is bool b && b);
         }
 
         // GetReferral check valid referral

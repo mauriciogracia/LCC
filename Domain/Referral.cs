@@ -39,7 +39,7 @@
         /// example ABC123XYZ 
         /// </summary>
         /// <returns></returns>
-        private string GenerateReferralId()
+        private static string GenerateReferralId()
         {
             return string.Concat(Enumerable.Range(0, 3).Select(_ => Guid.NewGuid().ToString("N").Substring(0, 3).ToUpper()));
         }

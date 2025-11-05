@@ -10,12 +10,12 @@ namespace Tests
 {
     public class ReferralServiceTests
     {
-        readonly ILog _log ;
-        readonly IReferralFeatures referrals ;
-        readonly IUtilFeatures util;
-        readonly string defaultUid = "U1";
-        readonly string refCode = "A1B2C3";
-        readonly string referralName = "Jose";
+        private readonly ILog _log;
+        private readonly IReferralFeatures referrals;
+        private readonly IUtilFeatures util;
+        private readonly string defaultUid = "U1";
+        private readonly string refCode = "A1B2C3";
+        private readonly string referralName = "Jose";
 
         public ReferralServiceTests()
         {
@@ -42,7 +42,7 @@ namespace Tests
             Assert.False(util.IsValidReferralCode("AA"));
             Assert.False(util.IsValidReferralCode("ASDFASDFASDF"));
             Assert.False(util.IsValidReferralCode("%&/()"));
-            Assert.False(util.IsValidReferralCode("12345!")); 
+            Assert.False(util.IsValidReferralCode("12345!"));
         }
 
         [Fact]
@@ -81,25 +81,28 @@ namespace Tests
 
             Assert.Empty(refs);
         }
-            [Fact]
+        [Fact]
         public async void AddingAndListingReferrals()
         {
             bool success;
-            
+
             await referrals.DeleteUserReferrals(defaultUid);
             IEnumerable<Referral> refs = await referrals.GetUserReferrals(defaultUid);
 
             Assert.Empty(refs);
 
             success = await referrals.AddReferral(new Referral(defaultUid, referralName, ReferralMethod.SMS, refCode));
+            Assert.True(success);
             refs = await referrals.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 1);
 
             success = await referrals.AddReferral(new Referral(defaultUid, referralName, ReferralMethod.EMAIL, refCode));
+            Assert.True(success);
             refs = await referrals.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 2);
 
             success = await referrals.AddReferral(new Referral(defaultUid, referralName, ReferralMethod.SHARE, refCode));
+            Assert.True(success);
             refs = await referrals.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 3);
 
@@ -107,7 +110,6 @@ namespace Tests
             //adding the same referral should NOT really add it
             success = await referrals.AddReferral(new Referral(defaultUid, referralName, ReferralMethod.EMAIL, refCode));
             Assert.False(success);
-
             refs = await referrals.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 3); //the number keeps the same 3 items
         }
@@ -117,7 +119,7 @@ namespace Tests
         {
             string msg = util.PrepareMessage(ReferralMethod.SMS, refCode);
 
-            Assert.True(msg.Substring(0, 4) == "Hi! ");
+            Assert.True(msg[..4] == "Hi! ");
         }
 
         [Fact]
@@ -125,7 +127,7 @@ namespace Tests
         {
             string msg = util.PrepareMessage(ReferralMethod.SHARE, refCode);
 
-            Assert.True(msg.Substring(0, 4) == "Hey\n");
+            Assert.True(msg[..4] == "Hey\n");
         }
 
         [Fact]
@@ -134,8 +136,8 @@ namespace Tests
 
             Referral refA = new Referral(defaultUid, referralName, ReferralMethod.SMS, refCode);
             bool success = await referrals.AddReferral(refA);
-
-            Referral ?refB = await referrals.GetReferral(refCode, referralName);
+            Assert.True(success);
+            Referral? refB = await referrals.GetReferral(refCode, referralName);
             Assert.Equal(refA, refB);
         }
 
@@ -154,13 +156,15 @@ namespace Tests
             Referral refA = new Referral(defaultUid, referralName, ReferralMethod.SMS, refCode);
             bool success = await referrals.AddReferral(refA);
 
-            success  = await referrals.UpdateReferral(refA.ReferralCode, referralName, ReferralStatus.Started);
+            success = await referrals.UpdateReferral(refA.ReferralCode, referralName, ReferralStatus.Started);
+            Assert.True(success);
             Referral? refB = await referrals.GetReferral(refCode, referralName);
 
             Assert.NotNull(refB);
             Assert.True(refB.Status == ReferralStatus.Started);
 
             success = await referrals.UpdateReferral(refA.ReferralCode, referralName, ReferralStatus.Completed);
+            Assert.True(success);
             Referral? refC = await referrals.GetReferral(refCode, referralName);
 
             Assert.NotNull(refC);
