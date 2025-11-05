@@ -1,4 +1,6 @@
-﻿namespace LCC.Models
+﻿using Domain;
+
+namespace Application.DTO
 {
     public class PrepareMessageRequest
     {

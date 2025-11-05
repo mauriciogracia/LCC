@@ -1,8 +1,9 @@
-﻿using LCC.Interfaces;
-using LCC.Models;
-using LCC.Services;
+﻿using Application.Interfaces;
+using Application.Services;
+using Domain;
+using Infrastructure;
 
-namespace LCC.Tests
+namespace Tests
 {
     public class ReferralFeatureTests
     {
@@ -74,21 +75,21 @@ namespace LCC.Tests
 
             Assert.Empty(refs);
 
-            success = await refService.AddReferral(new Referral(defaultUid, referralName, Models.ReferralMethod.SMS, refCode));
+            success = await refService.AddReferral(new Referral(defaultUid, referralName, ReferralMethod.SMS, refCode));
             refs = await refService.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 1);
 
-            success = await refService.AddReferral(new Referral(defaultUid, referralName, Models.ReferralMethod.EMAIL, refCode));
+            success = await refService.AddReferral(new Referral(defaultUid, referralName, ReferralMethod.EMAIL, refCode));
             refs = await refService.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 2);
 
-            success = await refService.AddReferral(new Referral(defaultUid, referralName, Models.ReferralMethod.SHARE, refCode));
+            success = await refService.AddReferral(new Referral(defaultUid, referralName, ReferralMethod.SHARE, refCode));
             refs = await refService.GetUserReferrals(defaultUid);
             Assert.True(refs.Count() == 3);
 
 
             //adding the same referral should NOT really add it
-            success = await refService.AddReferral(new Referral(defaultUid, referralName, Models.ReferralMethod.EMAIL, refCode));
+            success = await refService.AddReferral(new Referral(defaultUid, referralName, ReferralMethod.EMAIL, refCode));
             Assert.False(success);
 
             refs = await refService.GetUserReferrals(defaultUid);

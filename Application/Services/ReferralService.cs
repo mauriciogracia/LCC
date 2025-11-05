@@ -1,14 +1,13 @@
-﻿using LCC.Interfaces;
-using LCC.Models;
-using System.Linq;
+﻿using Application.Interfaces;
+using Domain;
 using System.Text.RegularExpressions;
 
-namespace LCC.Services
+namespace Application.Services
 {
     public class ReferralService : IReferralFeatures
     {
-        static readonly List<UserPartial> _users = new List<UserPartial>();
-        static readonly Dictionary<string, List<Referral>> referralerralsByUid = new Dictionary<string, List<Referral>>();
+        static readonly List<User> _users = new List<User>();
+        static readonly Dictionary<string, List<Referral>> referralsByUserId = new Dictionary<string, List<Referral>>();
         ILog log;
 
         public ReferralService(ILog logger)
@@ -24,12 +23,12 @@ namespace LCC.Services
         public async Task<string> GetUserReferralCode(string uid)
         {
             string code;
-            UserPartial? usr = _users.Find(u => u.Uid.Equals(uid));
+            User? usr = _users.Find(u => u.Uid.Equals(uid));
 
             //a user is created on the fly to simplify scenarios and no need for seed data
             if (usr == null)
             {
-                usr = new UserPartial();
+                usr = new User();
                 usr.Uid = uid;
                 usr.ReferralCode = await PrepareReferralCode(uid);
                 _users.Add(usr); 
@@ -55,19 +54,19 @@ namespace LCC.Services
             
             return await Task.Run(() =>
             {
-                return referralerralsByUid.TryGetValue(uid, out var resp) ? resp : Enumerable.Empty<Referral>();
+                return referralsByUserId.TryGetValue(uid, out var resp) ? resp : Enumerable.Empty<Referral>();
             });
         }
 
         public void ClearUserReferrals(string uid)
         {
-            if (referralerralsByUid.TryGetValue(uid, out var referrals))
+            if (referralsByUserId.TryGetValue(uid, out var referrals))
             {
                 referrals.Clear(); // Clears the list in-place
             }
         }
         /// <summary>
-        /// prepare a unique referral code for the same UID always (generated once, kept in UserPartial)
+        /// prepare a unique referral code for the same UID always (generated once, kept in User)
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
@@ -107,12 +106,12 @@ namespace LCC.Services
                 log.info($"Adding referral...{uid}");
 
                 //Is the first referral for the user
-                if (!referralerralsByUid.ContainsKey(uid))
-                    referralerralsByUid[uid] = new List<Referral>();
+                if (!referralsByUserId.ContainsKey(uid))
+                    referralsByUserId[uid] = new List<Referral>();
 
-                if (!referralerralsByUid[uid].Contains(referral))
+                if (!referralsByUserId[uid].Contains(referral))
                 {
-                    referralerralsByUid[uid].Add(referral);
+                    referralsByUserId[uid].Add(referral);
                     success = true;
                 }
                 else
@@ -123,7 +122,6 @@ namespace LCC.Services
                 return success;
             });
         }
-
         public async Task<string> PrepareMessage(ReferralMethod method, string referralCode)
         {
             return await Task.Run(() =>
@@ -149,7 +147,7 @@ namespace LCC.Services
                     referral.Status = newStatus;
                     referral.UpdatedAt = DateTime.Now;
 
-                    referralerralsByUid[referral.Uid].Find(r => r.Uid == referralCode);
+                    referralsByUserId[referral.Uid].Find(r => r.Uid == referralCode);
                     success = true;
                 }
 
@@ -161,7 +159,7 @@ namespace LCC.Services
         {
             return await Task.Run(() =>
             {
-                Referral? referral = referralerralsByUid
+                Referral? referral = referralsByUserId
                                 .SelectMany(kvp => kvp.Value)
                                 .FirstOrDefault(r => r.ReferralCode == referralCode && r.Name == name);
 

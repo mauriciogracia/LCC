@@ -1,8 +1,9 @@
-﻿using LCC.Interfaces;
-using LCC.Models;
+﻿using Application.DTO;
+using Application.Interfaces;
+using Domain;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LCC.Controllers
+namespace Controllers
 {
     /// <summary>
     /// Referral Controller that exposes REST endpoints 

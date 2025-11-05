@@ -1,7 +1,8 @@
-using LCC.Interfaces;
-using LCC.Services;
 
-namespace LCC
+using Application.Interfaces;
+using Application.Services;
+
+namespace API
 {
     public class Program
     {
@@ -10,7 +11,6 @@ namespace LCC
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            builder.Services.AddScoped<ILog, ConsoleLogger>();
             builder.Services.AddScoped<IReferralFeatures, ReferralService>();
             builder.Services.AddControllers();
 

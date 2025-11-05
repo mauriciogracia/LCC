@@ -1,12 +1,14 @@
-﻿using LCC.Models;
+﻿
+using Domain;
 
-namespace LCC.Interfaces
+namespace Application.Interfaces
 {
     public interface IReferralFeatures
     {
         Task<string> GetUserReferralCode(string uid);
 
         Task<bool> IsValidReferralCode(string code);
+
 
         void ClearUserReferrals(string uid);
 

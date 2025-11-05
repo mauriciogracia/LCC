@@ -1,0 +1,15 @@
+1. Refactor to Clean Architecture: 
+Create domain-driven layers (Domain, Application, Infrastructure, API). 
+
+
+System.AggregateException: 
+'Some services are not able to be constructed (Error while validating the service descriptor 'ServiceType: Application.Interfaces.IReferralFeatures Lifetime: Scoped ImplementationType: Application.Services.ReferralService': Unable to resolve service for type 'Domain.ILog' while attempting to activate 'Application.Services.ReferralService'.)'
+-----------
+2. Add real world database Layer: 
+Use EF Core or repository abstraction with in-memory or SQLite provider. 
+
+3. Centralize Error Handling: Replace per-action try/catch with global middleware and structured logs. 
+
+4. Introduce Validation and DTOs: 
+
+Use FluentValidation or similar tools for clean input contracts. 5. Expand Test Suite: Cover edge cases, invalid inputs, and integration with real endpoints. 6. Complete Functional Endpoints: Add statistics, code validation endpoint, and deep-link metadata flows to align with product spec.
