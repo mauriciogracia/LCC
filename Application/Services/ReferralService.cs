@@ -29,25 +29,26 @@ namespace Application.Services
         /// <returns></returns>
         public async Task<string> GetUserReferralCode(string uid)
         {
-            string code;
+            string code = "";
             User? usr = await users.GetByIdAsync(uid);
 
-            //TODO MGG - There are now 5 users we dont need to to this anymore
-            //a user is created on the fly to simplify scenarios and no need for seed data
             if (usr == null)
             {
-                usr = new User();
-                usr.Uid = uid;
-                usr.ReferralCode = util.PrepareReferralCode(uid);
-                await users.AddAsync(usr);
-                log.info($"user created: {uid}, with refCode: {usr.ReferralCode}");
+                log.error($"User with {uid} does not exist");
             }
             else
             {
+                //generate referral code the 1st time
+                if(string.IsNullOrEmpty(usr.ReferralCode))
+                {
+                    usr.ReferralCode = util.PrepareReferralCode(uid);
+                    await users.UpdateAsync(usr);
+                }
+
+                code = usr.ReferralCode;
                 log.info($"user exists with refCode: {usr.ReferralCode}");
             }
-
-            code = usr.ReferralCode;
+            
             return code;
         }
         public async Task<IEnumerable<Referral>> GetReferralsByUserIdAsync(string uid)

@@ -17,6 +17,7 @@ namespace API
             builder.Services.AddScoped<IReferralFeatures, ReferralService>();
             builder.Services.AddControllers();
 
+            
             // Add Swagger services
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -33,6 +34,8 @@ namespace API
             {
                 app.UseHsts();
             }
+
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.UseHttpsRedirection();
 

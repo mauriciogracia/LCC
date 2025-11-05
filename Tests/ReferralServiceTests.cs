@@ -8,16 +8,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Tests
 {
-    public class ReferralFeatureTests
+    public class ReferralServiceTests
     {
         readonly ILog _log ;
         IReferralFeatures referrals ;
         IUtilFeatures util;
-        string defaultUid = "uid123";
+        string defaultUid = "U1";
         string refCode = "A1B2C3";
         string referralName = "Jose";
 
-        public ReferralFeatureTests()
+        public ReferralServiceTests()
         {
             _log = new ConsoleLogger();
 

@@ -36,7 +36,6 @@ namespace Application.Services
                 return ((method == ReferralMethod.SMS) ? "Hi! " : "Hey\n") + template + referralCode;
         }
 
-        //TODO MGG - this should be in a .json or properties file instead or retrieved from a template repository
         const string template = $@"Join me in earning cash for our school by using the Carton Caps app. It’s an easy way to make a difference. 
 All you have to do is buy Carton Caps participating products (like Cheerios!) and scan your grocery receipt. 
 Carton Caps are worth $.10 each and they add up fast! Twice a year, our school receives a check to help pay 

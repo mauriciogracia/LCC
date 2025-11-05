@@ -13,11 +13,11 @@ namespace Controllers
     [ApiController]
     public class ReferralsController : ControllerBase
     {
-        readonly ILog log ;
+        readonly ILog log;
         readonly IReferralFeatures referrals;
         readonly IUtilFeatures util;
 
-        public ReferralsController(IReferralFeatures referral,IUtilFeatures utilService, ILog logger)
+        public ReferralsController(IReferralFeatures referral, IUtilFeatures utilService, ILog logger)
         {
             referrals = referral;
             util = utilService;
@@ -39,16 +39,8 @@ namespace Controllers
                 log.error(msg);
                 return BadRequest(msg);
             }
-            try
-            {
-                var code = await referrals.GetUserReferralCode(uid);
-                return Ok(code);
-            }
-            catch (Exception ex)
-            {
-                log.error(ex.Message);
-                return StatusCode(500, "An unexpected error occurred.");
-            }
+            var code = await referrals.GetUserReferralCode(uid);
+            return Ok(code);
         }
         [HttpGet("referrals/validate/{referralCode}")]
         public bool ValidateReferralCode(string referralCode)
@@ -71,17 +63,8 @@ namespace Controllers
                 return BadRequest(msg);
             }
 
-            try
-            {
-                var referrals = await this.referrals.GetUserReferrals(uid);
-                return Ok(referrals);
-            }
-            catch (Exception ex)
-            {
-                log.error(ex.Message);
-                return StatusCode(500, "An unexpected error occurred.");
-            }
-            
+            var referrals = await this.referrals.GetUserReferrals(uid);
+            return Ok(referrals);
         }
         /// <summary>
         /// Adds a Referral to a user using the ReferralAddRequest
@@ -101,26 +84,17 @@ namespace Controllers
                 return BadRequest(errorMsg);
             }
 
-            try
-            {
-                bool isValidCode = util.IsValidReferralCode(request.ReferralCode);
+            bool isValidCode = util.IsValidReferralCode(request.ReferralCode);
 
-                if (!isValidCode)
-                {
-                    var msg = $"Invalid referral code: {request.ReferralCode}";
-                    log.error(msg);
-                    return BadRequest(msg);
-                }
-
-                bool result = await referrals.AddReferral(new Referral(request.Uid, request.Name, request.Method, request.ReferralCode));
-                return Ok(result);
-            }
-            catch (Exception ex)
+            if (!isValidCode)
             {
-                log.error(ex.Message);
-                return StatusCode(500, "An unexpected error occurred.");
+                var msg = $"Invalid referral code: {request.ReferralCode}";
+                log.error(msg);
+                return BadRequest(msg);
             }
-            
+
+            bool result = await referrals.AddReferral(new Referral(request.Uid, request.Name, request.Method, request.ReferralCode));
+            return Ok(result);
         }
 
         /// <summary>
@@ -139,49 +113,33 @@ namespace Controllers
                 return BadRequest(msg);
             }
 
-            try
-            {
-                bool isValidCode = util.IsValidReferralCode(referralCode);
+            bool isValidCode = util.IsValidReferralCode(referralCode);
 
-                if (!isValidCode)
-                {
-                    var msg = $"Invalid referral code: {referralCode}";
-                    log.error(msg);
-                    return BadRequest(msg);
-                }
-                var inviteMessage = util.PrepareMessage(rm, referralCode);
-
-                return Ok(inviteMessage);
-            }
-            catch (Exception ex)
+            if (!isValidCode)
             {
-                log.error(ex.Message);
-                return StatusCode(500, "An unexpected error occurred.");
+                var msg = $"Invalid referral code: {referralCode}";
+                log.error(msg);
+                return BadRequest(msg);
             }
+            var inviteMessage = util.PrepareMessage(rm, referralCode);
+
+            return Ok(inviteMessage);
         }
 
         [HttpGet("referrals/{referralCode}")]
         public async Task<ActionResult<Referral>> GetReferral(string referralCode, string name)
         {
-            try
-            {
-                bool isValidCode = util.IsValidReferralCode(referralCode);
+            bool isValidCode = util.IsValidReferralCode(referralCode);
 
-                if (!isValidCode)
-                {
-                    var msg = $"Invalid referral code: {referralCode}";
-                    log.error(msg);
-                    return BadRequest(msg);
-                }
-
-                var referral = await referrals.GetReferral(referralCode,  name);
-                return Ok(referral);
-            }
-            catch (Exception ex)
+            if (!isValidCode)
             {
-                log.error(ex.Message);
-                return StatusCode(500, "An unexpected error occurred.");
+                var msg = $"Invalid referral code: {referralCode}";
+                log.error(msg);
+                return BadRequest(msg);
             }
+
+            var referral = await referrals.GetReferral(referralCode, name);
+            return Ok(referral);
         }
 
         [HttpPut("referrals/{referralCode}")]
@@ -194,26 +152,18 @@ namespace Controllers
                 return BadRequest(msg);
             }
 
-            try
+            bool isValidCode = util.IsValidReferralCode(referralCode);
+
+            if (!isValidCode)
             {
-                bool isValidCode = util.IsValidReferralCode(referralCode);
-
-                if (!isValidCode)
-                {
-                    var msg = $"Invalid referral code: {referralCode}";
-                    log.error(msg);
-                    return BadRequest(msg);
-                }
-
-                bool succeeded = await referrals.UpdateReferral(referralCode, name, rs);
-
-                return Ok(succeeded);
+                var msg = $"Invalid referral code: {referralCode}";
+                log.error(msg);
+                return BadRequest(msg);
             }
-            catch (Exception ex)
-            {
-                log.error(ex.Message);
-                return StatusCode(500, "An unexpected error occurred.");
-            }
+
+            bool succeeded = await referrals.UpdateReferral(referralCode, name, rs);
+
+            return Ok(succeeded);
         }
     }
 }
