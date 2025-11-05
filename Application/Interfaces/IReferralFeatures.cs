@@ -7,14 +7,9 @@ namespace Application.Interfaces
     {
         Task<string> GetUserReferralCode(string uid);
 
-        Task<bool> IsValidReferralCode(string code);
-
-
-        void ClearUserReferrals(string uid);
+        Task<bool> DeleteUserReferrals(string uid);
 
         Task<IEnumerable<Referral>> GetUserReferrals(string uid);
-
-        Task<string> PrepareMessage(ReferralMethod method, string referralCode);
 
         Task<bool> AddReferral(Referral referral);
 

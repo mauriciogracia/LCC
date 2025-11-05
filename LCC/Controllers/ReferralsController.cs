@@ -13,13 +13,15 @@ namespace Controllers
     [ApiController]
     public class ReferralsController : ControllerBase
     {
-        ILog log ;
-        IReferralFeatures referralService;
+        readonly ILog log ;
+        readonly IReferralFeatures referrals;
+        readonly IUtilFeatures util;
 
-        public ReferralsController(IReferralFeatures referral, ILog log)
+        public ReferralsController(IReferralFeatures referral,IUtilFeatures utilService, ILog logger)
         {
-            referralService = referral;
-            this.log = log;
+            referrals = referral;
+            util = utilService;
+            log = logger;
         }
 
         /// <summary>
@@ -39,7 +41,7 @@ namespace Controllers
             }
             try
             {
-                var code = await referralService.GetUserReferralCode(uid);
+                var code = await referrals.GetUserReferralCode(uid);
                 return Ok(code);
             }
             catch (Exception ex)
@@ -49,9 +51,9 @@ namespace Controllers
             }
         }
         [HttpGet("referrals/validate/{referralCode}")]
-        public async Task<bool> ValideReferralCode(string referralCode)
+        public bool ValidateReferralCode(string referralCode)
         {
-            return await referralService.IsValidReferralCode(referralCode);
+            return util.IsValidReferralCode(referralCode);
         }
 
         /// <summary>
@@ -71,7 +73,7 @@ namespace Controllers
 
             try
             {
-                var referrals = await referralService.GetUserReferrals(uid);
+                var referrals = await this.referrals.GetUserReferrals(uid);
                 return Ok(referrals);
             }
             catch (Exception ex)
@@ -101,7 +103,7 @@ namespace Controllers
 
             try
             {
-                bool isValidCode = await referralService.IsValidReferralCode(request.ReferralCode);
+                bool isValidCode = util.IsValidReferralCode(request.ReferralCode);
 
                 if (!isValidCode)
                 {
@@ -110,7 +112,7 @@ namespace Controllers
                     return BadRequest(msg);
                 }
 
-                bool result = await referralService.AddReferral(new Referral(request.Uid, request.Name, request.Method, request.ReferralCode));
+                bool result = await referrals.AddReferral(new Referral(request.Uid, request.Name, request.Method, request.ReferralCode));
                 return Ok(result);
             }
             catch (Exception ex)
@@ -128,7 +130,7 @@ namespace Controllers
         /// <param name="referralCode"></param>
         /// <returns></returns>
         [HttpGet("referrals/invite-msg")]
-        public async Task<ActionResult<string>> PrepareMessage([FromQuery] string method, [FromQuery] string referralCode)
+        public ActionResult<string> PrepareMessage([FromQuery] string method, [FromQuery] string referralCode)
         {
             if (!Enum.TryParse<ReferralMethod>(method, true, out var rm))
             {
@@ -139,7 +141,7 @@ namespace Controllers
 
             try
             {
-                bool isValidCode = await referralService.IsValidReferralCode(referralCode);
+                bool isValidCode = util.IsValidReferralCode(referralCode);
 
                 if (!isValidCode)
                 {
@@ -147,7 +149,7 @@ namespace Controllers
                     log.error(msg);
                     return BadRequest(msg);
                 }
-                var inviteMessage = await referralService.PrepareMessage(rm, referralCode);
+                var inviteMessage = util.PrepareMessage(rm, referralCode);
 
                 return Ok(inviteMessage);
             }
@@ -163,7 +165,7 @@ namespace Controllers
         {
             try
             {
-                bool isValidCode = await referralService.IsValidReferralCode(referralCode);
+                bool isValidCode = util.IsValidReferralCode(referralCode);
 
                 if (!isValidCode)
                 {
@@ -172,7 +174,7 @@ namespace Controllers
                     return BadRequest(msg);
                 }
 
-                var referral = await referralService.GetReferral(referralCode,  name);
+                var referral = await referrals.GetReferral(referralCode,  name);
                 return Ok(referral);
             }
             catch (Exception ex)
@@ -194,7 +196,7 @@ namespace Controllers
 
             try
             {
-                bool isValidCode = await referralService.IsValidReferralCode(referralCode);
+                bool isValidCode = util.IsValidReferralCode(referralCode);
 
                 if (!isValidCode)
                 {
@@ -203,7 +205,7 @@ namespace Controllers
                     return BadRequest(msg);
                 }
 
-                bool succeeded = await referralService.UpdateReferral(referralCode, name, rs);
+                bool succeeded = await referrals.UpdateReferral(referralCode, name, rs);
 
                 return Ok(succeeded);
             }

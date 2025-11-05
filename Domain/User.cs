@@ -11,5 +11,8 @@
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;   
         public string ReferralCode { get; set; } = string.Empty;
+
+        // 🔗 Navigation property
+        public ICollection<Referral> Referrals { get; set; } = new List<Referral>();
     }
 }

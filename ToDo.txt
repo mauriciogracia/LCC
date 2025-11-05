@@ -1,9 +1,11 @@
 1. Refactor to Clean Architecture - DONE
-Create domain-driven layers (Domain, Application, Infrastructure, API). 
+
+X Create domain-driven layers (Domain, Application, Infrastructure, API). 
 
 -----------
 2. Add real world database Layer: 
-Use EF Core or repository abstraction with in-memory or SQLite provider. 
+
+X Use EF Core or repository abstraction with in-memory or SQLite provider. 
 
 -----------
 3. Centralize Error Handling: 
@@ -16,9 +18,10 @@ Use FluentValidation or similar tools for clean input contracts.
 
 -----------
 5. Expand Test Suite: 
+- test with endpoints (not just the service)
 - Cover edge cases
 - invalid inputs
-- test with real endpoints. 
+
 -----------
 6. Complete Functional Endpoints: 
 - Add statistics

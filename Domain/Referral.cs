@@ -15,7 +15,8 @@
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
-
+        // Navigation property
+        public User? User { get; set; }
 
         /// <summary>
         /// Creates a referral for a given user(uid), person name and method

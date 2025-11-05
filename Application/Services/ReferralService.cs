@@ -2,19 +2,25 @@
 using Domain;
 using Domain.Interfaces;
 using System.Text.RegularExpressions;
+using System.Xml.Schema;
 
 namespace Application.Services
 {
     public class ReferralService : IReferralFeatures
     {
-        static readonly List<User> _users = new List<User>();
-        static readonly Dictionary<string, List<Referral>> referralsByUserId = new Dictionary<string, List<Referral>>();
+        private readonly IRepository<User> users;
+        private readonly IRepository<Referral> referrals;
+        private readonly IUtilFeatures util;
         ILog log;
 
-        public ReferralService(ILog logger)
+        public ReferralService(IRepository<User> usersRepo, IRepository<Referral> referralsRepo, ILog logger, IUtilFeatures UtilFeatures)
         {
+            users = usersRepo;
+            referrals = referralsRepo;
+            util = UtilFeatures;
             log = logger;
         }
+
         /// <summary>
         /// In real life the uid must already exist, since I'm mocking the service
         /// when a UID does not exist, it will be added to simplify flow
@@ -24,15 +30,16 @@ namespace Application.Services
         public async Task<string> GetUserReferralCode(string uid)
         {
             string code;
-            User? usr = _users.Find(u => u.Uid.Equals(uid));
+            User? usr = await users.GetByIdAsync(uid);
 
+            //TODO MGG - There are now 5 users we dont need to to this anymore
             //a user is created on the fly to simplify scenarios and no need for seed data
             if (usr == null)
             {
                 usr = new User();
                 usr.Uid = uid;
-                usr.ReferralCode = await PrepareReferralCode(uid);
-                _users.Add(usr); 
+                usr.ReferralCode = util.PrepareReferralCode(uid);
+                await users.AddAsync(usr);
                 log.info($"user created: {uid}, with refCode: {usr.ReferralCode}");
             }
             else
@@ -43,7 +50,12 @@ namespace Application.Services
             code = usr.ReferralCode;
             return code;
         }
-
+        public async Task<IEnumerable<Referral>> GetReferralsByUserIdAsync(string uid)
+        {
+            var allReferrals = await referrals.GetAllAsync();
+            return allReferrals.Where(r => r.Uid == uid);
+        }
+        
         /// <summary>
         /// List user referrals 
         /// </summary>
@@ -52,46 +64,32 @@ namespace Application.Services
         public async Task<IEnumerable<Referral>> GetUserReferrals(string uid)
         {
             log.info($"Getting referrals for : {uid}");
-            
-            return await Task.Run(() =>
-            {
-                return referralsByUserId.TryGetValue(uid, out var resp) ? resp : Enumerable.Empty<Referral>();
-            });
+            return await GetReferralsByUserIdAsync(uid);
         }
 
-        public void ClearUserReferrals(string uid)
+        public async Task<bool> DeleteUserReferrals(string uid)
         {
-            if (referralsByUserId.TryGetValue(uid, out var referrals))
+            bool success = false ;
+
+            try
             {
-                referrals.Clear(); // Clears the list in-place
+                var userReferrals = await referrals.GetAllAsync();
+                var toDelete = userReferrals.Where(r => r.Uid == uid).ToList();
+
+                foreach (var referral in toDelete)
+                {
+                    await referrals.DeleteAsync(referral.ReferralId);
+                }
+                log.info("DeleteUserReferrals DONE");
+                success = true;
+            }catch
+            {
+                log.error("DeleteUserReferrals failed");
             }
-        }
-        /// <summary>
-        /// prepare a unique referral code for the same UID always (generated once, kept in User)
-        /// </summary>
-        /// <param name="uid"></param>
-        /// <returns></returns>
-        private async Task<string> PrepareReferralCode(string uid)
-        {
-            log.info($"Generating referral code : {uid}");
 
-            using var sha256 = System.Security.Cryptography.SHA256.Create();
-            byte[] hash = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(uid));
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-            return await Task.Run(() =>
-            {
-                return string.Concat(hash.Take(6).Select(b => chars[b % chars.Length]));
-            });
+            return success;
         }
-
-        public async Task<bool> IsValidReferralCode(string code)
-        {
-            return await Task.Run(() =>
-            {
-                return Regex.IsMatch(code, @"^[A-Z0-9]{6}$");
-            });
-        }
+       
         /// <summary>
         /// Add a referral to the uid of the referral
         /// </summary>
@@ -102,43 +100,30 @@ namespace Application.Services
             bool success = false;
             string uid = referral.Uid;
 
-            return await Task.Run(() =>
+            
+
+              
+            var refExists = await referrals.GetByFilterAsync(r => r.Name == referral.Name && r.Method == referral.Method);
+
+            if (refExists.Any())
+            {
+                log.error($"Referral already exists - not added");
+            }
+            else
             {
                 log.info($"Adding referral...{uid}");
+                await referrals.AddAsync(referral);
+                success = true;
+            }
 
-                //Is the first referral for the user
-                if (!referralsByUserId.ContainsKey(uid))
-                    referralsByUserId[uid] = new List<Referral>();
-
-                if (!referralsByUserId[uid].Contains(referral))
-                {
-                    referralsByUserId[uid].Add(referral);
-                    success = true;
-                }
-                else
-                {
-                    log.error($"Referral could not be added");
-                }
-
-                return success;
-            });
-        }
-        public async Task<string> PrepareMessage(ReferralMethod method, string referralCode)
-        {
-            return await Task.Run(() =>
-            {
-                log.info($"Preparing message based on method/app");
-                return ((method == ReferralMethod.SMS) ? "Hi! " : "Hey\n") + template + referralCode;
-            });
+            return success;
         }
 
         public async Task<bool> UpdateReferral(string referralCode, string name, ReferralStatus newStatus)
         {
             bool success = false;
-            Referral ?referral = await GetReferral(referralCode, name);
+            Referral? referral = await GetReferral(referralCode, name);
 
-            return await Task.Run(() =>
-            {
                 if (referral == null)
                 {
                     log.error($"No referral found for {referralCode}");
@@ -147,34 +132,19 @@ namespace Application.Services
                 {
                     referral.Status = newStatus;
                     referral.UpdatedAt = DateTime.Now;
-
-                    referralsByUserId[referral.Uid].Find(r => r.Uid == referralCode);
+                    await referrals.UpdateAsync(referral);
                     success = true;
                 }
 
                 return success;
-            });
         }
 
         public async Task<Referral?> GetReferral(string referralCode, string name)
         {
-            return await Task.Run(() =>
-            {
-                Referral? referral = referralsByUserId
-                                .SelectMany(kvp => kvp.Value)
-                                .FirstOrDefault(r => r.ReferralCode == referralCode && r.Name == name);
-
-                return referral;
-            });
+            var matches = await referrals.GetByFilterAsync(r => r.ReferralCode == referralCode && r.Name == name);
+            var result = matches.FirstOrDefault();
+            return result;
         }
 
-        //TODO MGG - this should be in a .json or properties file instead or retrieved from a template repository
-
-        const string template = $@"Join me in earning cash for our school by using the Carton Caps app. It’s an easy way to make a difference. 
-All you have to do is buy Carton Caps participating products (like Cheerios!) and scan your grocery receipt. 
-Carton Caps are worth $.10 each and they add up fast! Twice a year, our school receives a check to help pay 
-for whatever we need - equipment, supplies or experiences the kids love!
-
-Download the Carton Caps app here: https://cartoncaps.link/abfilefa90p?referral_code=";
     }
 }
