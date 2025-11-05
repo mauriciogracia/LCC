@@ -33,6 +33,11 @@ To run tests
 Open 
 - http://localhost:5097/swagger/index.html
 
+To check test coverage
+
+dotnet test Tests.csproj --property:CollectCoverage=true --property:CoverletOutputFormat=cobertura
+
+
 ## OVERVIEW
 There are two projects
 - **LCC** - is where the actual endpoint logic lives (controller, services, models)
