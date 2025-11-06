@@ -1,5 +1,7 @@
 ﻿using API;
+using Application.DTO;
 using Domain;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
 using System.Text;
@@ -68,17 +70,18 @@ namespace Tests
         [Fact]
         public async Task AddReferral_ValidRequest_ReturnsTrue()
         {
-            var json = """
+            var request = new ReferralAddRequest
             {
-                "uid": "U1",
-                "name": "John",
-                "method": "email",
-                "referralCode": "ABC123"
-            }
-            """;
+                Uid = "U1",
+                Name = "John",
+                Method = ReferralMethod.EMAIL, 
+                ReferralCode = "ABC123"
+            };
+
+            var json = JsonSerializer.Serialize(request);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await client.PostAsync(BaseReferrals, content);
+            var response = await client.PostAsync("/api/referrals", content);
             response.EnsureSuccessStatusCode();
 
             var result = await response.Content.ReadAsStringAsync();
