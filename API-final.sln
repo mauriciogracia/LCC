@@ -16,6 +16,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9C73FA2A-B0E4-4699-984B-09C45AD96BEB}"
 	ProjectSection(SolutionItems) = preProject
 		ToDo.txt = ToDo.txt
+		coverlet.runsettings = coverlet.runsettings
 	EndProjectSection
 EndProject
 Global

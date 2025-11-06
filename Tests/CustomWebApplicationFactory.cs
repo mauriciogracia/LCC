@@ -4,17 +4,21 @@ using Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using API;
 
-public class CustomWebApplicationFactory : WebApplicationFactory<Program>
+namespace Tests
 {
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        builder.ConfigureServices(services =>
-        {
-            var sp = services.BuildServiceProvider();
 
-            using var scope = sp.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<ReferralDbContext>();
-            db.Database.EnsureCreated(); 
-        });
+    public class CustomWebApplicationFactory : WebApplicationFactory<Program>
+    {
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            builder.ConfigureServices(services =>
+            {
+                var sp = services.BuildServiceProvider();
+
+                using var scope = sp.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<ReferralDbContext>();
+                db.Database.EnsureCreated();
+            });
+        }
     }
 }

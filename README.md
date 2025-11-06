@@ -37,18 +37,7 @@ To run tests
 Open 
 - http://localhost:5097/swagger/index.html
 
-To check test coverage
-----------------------
 
-Install the report generator only once
-```dotnet tool install --global dotnet-reportgenerator-globaltool```
-
-When first time or when new tests are added
-
-Generate the XML coverage report ()
-```$dotnet test --collect:"XPlat Code Coverage" ```
-
-Convert that code to html(when new tests are added)
-```$reportgenerator -reports:TestResults/**/coverage.cobertura.xml -targetdir:coverage-report -reporttypes:Html```
-
-
+## Test coverage
+- Unit tests && Integration tests were added to achieve a 92% coverage
+![TestCoverageResults](./TestCoverage.png)

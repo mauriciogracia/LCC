@@ -42,7 +42,6 @@ namespace API
             builder.Services.AddValidatorsFromAssemblyContaining<PrepareMessageRequestValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<ReferralAddRequestValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<ReferralAttributionRequestValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<UpdateReferralRequestValidator>();
             builder.Services.AddFluentValidationAutoValidation();
 
             var app = builder.Build();

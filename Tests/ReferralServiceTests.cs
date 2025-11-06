@@ -11,7 +11,7 @@ namespace Tests
     public class ReferralServiceTests
     {
         private readonly ILog _log;
-        private readonly IReferralFeatures referrals;
+        private readonly ReferralService referrals;
         private readonly IUtilFeatures util;
         private readonly string defaultUid = "U1";
         private readonly string refCode = "A1B2C3";
