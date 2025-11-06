@@ -30,15 +30,13 @@ namespace API.Controllers
         /// <param name="uid"></param>
         /// <returns></returns>
         [HttpGet("referrals/code/{uid}")]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public async Task<ActionResult<string>> GetReferralCode(string uid)
         {
-            if (string.IsNullOrEmpty(uid))
+            if (string.IsNullOrWhiteSpace(uid))
             {
-                var msg = $"Invalid uid: {uid}";
-                log.error(msg);
-                return BadRequest(msg);
+                return BadRequest("UID cannot be empty.");
             }
+
             var code = await referrals.GetUserReferralCode(uid);
             return Ok(code);
         }
@@ -75,10 +73,6 @@ namespace API.Controllers
         [HttpPost("referrals")]
         public async Task<ActionResult<bool>> AddReferral([FromBody] ReferralAddRequest request)
         {
-            if (!ModelState.IsValid) { 
-                return BadRequest(ModelState);
-            }
-
             bool result = await referrals.AddReferral(new Referral(request.Uid, request.Name, request.Method, request.ReferralCode));
             return Ok(result);
         }
@@ -108,9 +102,7 @@ namespace API.Controllers
         [HttpGet("referrals")]
         public async Task<ActionResult<Referral>> GetReferral([FromQuery] GetReferralRequest grr)
         {
-            bool isValidCode = util.IsValidReferralCode(grr.ReferralCode);
-
-            if (!isValidCode)
+            if (!util.IsValidReferralCode(grr.ReferralCode))
             {
                 var msg = $"Invalid referral code: {grr.ReferralCode}";
                 log.error(msg);
@@ -118,15 +110,24 @@ namespace API.Controllers
             }
 
             var referral = await referrals.GetReferral(grr.ReferralCode, grr.Name);
+
+            if (referral == null)
+            {
+                return NotFound();
+            }
+
             return Ok(referral);
         }
 
+        //ASP.NET Core sometimes fails to bind [FromQuery] complex objects in PUT requests — even when the query string is correct
         [HttpPut("referrals")]
-        public async Task<ActionResult<bool>> UpdateReferral([FromQuery] UpdateReferralRequest urr)
+        public async Task<ActionResult<bool>> UpdateReferral(
+    [FromQuery] string referralCode,
+    [FromQuery] string name,
+    [FromQuery] string status)
         {
-            Enum.TryParse<ReferralStatus>(urr.Status, true, out var rs); 
-
-            bool succeeded = await referrals.UpdateReferral(urr.ReferralCode, urr.Name, rs);
+            Enum.TryParse<ReferralStatus>(status, true, out var rs);
+            var succeeded = await referrals.UpdateReferral(referralCode, name, rs);
             return Ok(succeeded);
         }
 

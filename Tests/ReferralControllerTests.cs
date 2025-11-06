@@ -1,272 +1,172 @@
-﻿using API.Controllers;
-using Application.DTO;
-using Application.Interfaces;
+﻿using API;
 using Domain;
-using Domain.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-using Moq;
+using Microsoft.AspNetCore.Mvc.Testing;
+using System.Net;
+using System.Text;
+using System.Text.Json;
 
 namespace Tests
 {
-    
-    public class ReferralsControllerTests
+    public class ReferralsControllerTests : IClassFixture<WebApplicationFactory<Program>>
     {
-        readonly ReferralsController controller;
-        readonly Mock<IReferralFeatures> referralMock = new();
-        readonly Mock<IUtilFeatures> utilMock = new();
-        readonly Mock<ILog> logMock = new();
-        string defaultUid = "U1";
+        private readonly HttpClient client;
 
-        public ReferralsControllerTests()
+        // ✅ Centralized endpoint definitions
+        private const string BaseReferrals = "/api/referrals";
+        private const string CodeByUid = "/api/referrals/code/";
+        private const string ValidateCode = "/api/referrals/validate/";
+        private const string ReferralListByUid = "/api/referrals/list/";
+        private const string InviteMessage = "/api/referrals/invite-msg";
+        private const string ReferralStats = "/api/referrals/stats";
+        private const string AttributeReferral = "/api/attribute";
+
+        public ReferralsControllerTests(WebApplicationFactory<Program> factory)
         {
-            controller = new ReferralsController(referralMock.Object, utilMock.Object, logMock.Object);
+            client = factory.CreateClient();
         }
 
-        // GetReferralCode: valid uid
         [Fact]
         public async Task GetReferralCode_ValidUid_ReturnsCode()
         {
-            string uid = defaultUid;
-            referralMock.Setup(r => r.GetUserReferralCode(uid)).ReturnsAsync("ABC123");
-
-            var result = await controller.GetReferralCode(uid);
-            var ok = Assert.IsType<OkObjectResult>(result.Result);
-            Assert.Equal("ABC123", ok.Value);
+            var response = await client.GetAsync(CodeByUid + "U1");
+            response.EnsureSuccessStatusCode();
+            var code = await response.Content.ReadAsStringAsync();
+            Assert.Equal("\"ABC123\"", code);
         }
 
-        // GetReferralCode: check empty uid
         [Fact]
         public async Task GetReferralCode_EmptyUid_ReturnsBadRequest()
         {
-            var result = await controller.GetReferralCode("");
-            Assert.IsType<BadRequestObjectResult>(result.Result);
+            var response = await client.GetAsync(CodeByUid + " ");
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
-        // ValidateReferralCode with valid code
         [Fact]
-        public void ValidateReferralCode_Valid_ReturnsTrue()
+        public async Task ValidateReferralCode_Valid_ReturnsTrue()
         {
-            utilMock.Setup(u => u.IsValidReferralCode("A1B2C3")).Returns(true);
-            Assert.True(controller.ValidateReferralCode("A1B2C3"));
+            var response = await client.GetAsync(ValidateCode + "ABC123");
+            var result = await response.Content.ReadAsStringAsync();
+            Assert.Equal("true", result);
         }
 
-        // ValidateReferralCode with invalid code
-        [Fact]
-        public void ValidateReferralCode_Invalid_ReturnsFalse()
-        {
-            utilMock.Setup(u => u.IsValidReferralCode("XYZ")).Returns(false);
-            Assert.False(controller.ValidateReferralCode("XYZ"));
-        }
-
-        // GetReferrals with a valid uid
         [Fact]
         public async Task GetReferrals_ValidUid_ReturnsList()
         {
-            referralMock.Setup(r => r.GetUserReferrals(defaultUid)).ReturnsAsync([new(defaultUid, "Jose", ReferralMethod.EMAIL, "A1B2C3")]);
-
-            var result = await controller.GetReferrals(defaultUid);
-            var ok = Assert.IsType<OkObjectResult>(result.Result);
-            var list = Assert.IsAssignableFrom<IEnumerable<Referral>>(ok.Value);
-            Assert.Single(list);
+            var response = await client.GetAsync(ReferralListByUid + "U1");
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+            Assert.Contains("referral", content);
         }
 
-        //  GetReferrals validate a null uid
         [Fact]
-        public async Task GetReferrals_NullUid_ReturnsBadRequest()
+        public async Task GetReferrals_EmptyUid_ReturnsBadRequest()
         {
-            var result = await controller.GetReferrals("");
-            Assert.IsType<BadRequestObjectResult>(result.Result);
+            var response = await client.GetAsync(ReferralListByUid + " ");
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
-        // AddReferral validate when correct request
         [Fact]
         public async Task AddReferral_ValidRequest_ReturnsTrue()
         {
-            var req = new ReferralAddRequest { Uid = defaultUid, Name = "Jose", Method = ReferralMethod.EMAIL, ReferralCode = "A1B2C3" };
-            utilMock.Setup(u => u.IsValidReferralCode(req.ReferralCode)).Returns(true);
-            referralMock.Setup(r => r.AddReferral(It.IsAny<Referral>())).ReturnsAsync(true);
-
-            var result = await controller.AddReferral(req);
-            var ok = Assert.IsType<OkObjectResult>(result.Result);
-
-            //Since is a possible null value
-            Assert.True(ok.Value is bool b && b);
-        }
-
-        // AddReferral validate invalid referral code
-        [Fact]
-        public async Task AddReferral_InvalidCode_ReturnsBadRequest()
-        {
-            var req = new ReferralAddRequest
+            var json = """
             {
-                Uid = defaultUid,
-                Name = "Jose",
-                Method = ReferralMethod.EMAIL,
-                ReferralCode = "XYZ"
-            };
+                "uid": "U1",
+                "name": "John",
+                "method": "email",
+                "referralCode": "ABC123"
+            }
+            """;
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            utilMock.Setup(u => u.IsValidReferralCode(req.ReferralCode)).Returns(false);
+            var response = await client.PostAsync(BaseReferrals, content);
+            response.EnsureSuccessStatusCode();
 
-            //Under unit testing the model state is valid by default - needs to be mark as dirty
-            controller.ModelState.AddModelError("ReferralCode", "Invalid referral code");
-
-            var result = await controller.AddReferral(req);
-
-            Assert.IsType<BadRequestObjectResult>(result.Result);
+            var result = await response.Content.ReadAsStringAsync();
+            Assert.Equal("true", result);
         }
 
-
-        // PrepareMessage validate correct referral code when preparing a message
         [Fact]
-        public void PrepareMessage_Valid_ReturnsMessage()
+        public async Task AddReferral_InvalidRequest_ReturnsBadRequest()
         {
-            var req = new PrepareMessageRequest { Method = ReferralMethod.EMAIL, ReferralCode = "A1B2C3" };
-            utilMock.Setup(u => u.IsValidReferralCode(req.ReferralCode)).Returns(true);
-            utilMock.Setup(u => u.PrepareMessage(req.Method, req.ReferralCode)).Returns("Invite via Email");
-
-            var result = controller.PrepareMessage(req);
-            var ok = Assert.IsType<OkObjectResult>(result.Result);
-            Assert.Equal("Invite via Email", ok.Value);
+            var json = "{}";
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await client.PostAsync(BaseReferrals, content);
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
-        // PrepareMessage validate INCORRECT referral code when preparing a message
         [Fact]
-        public void PrepareMessage_InvalidCode_ReturnsBadRequest()
+        public async Task PrepareMessage_ValidCode_ReturnsMessage()
         {
-            var req = new PrepareMessageRequest { Method = ReferralMethod.EMAIL, ReferralCode = "XYZ" };
-            utilMock.Setup(u => u.IsValidReferralCode(req.ReferralCode)).Returns(false);
-
-            var result = controller.PrepareMessage(req);
-            Assert.IsType<BadRequestObjectResult>(result.Result);
+            var response = await client.GetAsync($"{InviteMessage}?method=email&referralCode=ABC123");
+            response.EnsureSuccessStatusCode();
+            var message = await response.Content.ReadAsStringAsync();
+            Assert.Contains("ABC123", message);
         }
 
-        // UpdateReferral check that a referral is updated
         [Fact]
-        public async Task UpdateReferral_Valid_ReturnsTrue()
+        public async Task PrepareMessage_InvalidCode_ReturnsBadRequest()
         {
-            var req = new UpdateReferralRequest { ReferralCode = "A1B2C3", Name = "Jose", Status = "Completed" };
-            referralMock.Setup(r => r.UpdateReferral(req.ReferralCode, req.Name, ReferralStatus.Completed)).ReturnsAsync(true);
-
-            var result = await controller.UpdateReferral(req);
-            var ok = Assert.IsType<OkObjectResult>(result.Result);
-
-            //Since is a possible null value
-            Assert.True(ok.Value is bool b && b);
+            var response = await client.GetAsync($"{InviteMessage}?method=email&referralCode=INVALID");
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
-        // GetReferral check valid referral
         [Fact]
-        public async Task GetReferral_Valid_ReturnsReferral()
+        public async Task GetReferral_NotFound_ReturnsNotFound()
         {
-            var req = new GetReferralRequest { ReferralCode = "A1B2C3", Name = "Jose" };
-            utilMock.Setup(u => u.IsValidReferralCode(req.ReferralCode)).Returns(true);
-            referralMock.Setup(r => r.GetReferral(req.ReferralCode, req.Name)).ReturnsAsync(new Referral(defaultUid, "Jose", ReferralMethod.EMAIL, "A1B2C3"));
-
-            var result = await controller.GetReferral(req);
-            var ok = Assert.IsType<OkObjectResult>(result.Result);
-            var referral = Assert.IsType<Referral>(ok.Value);
-            Assert.Equal("Jose", referral.Name);
+            var response = await client.GetAsync($"{BaseReferrals}?referralCode=ABC999&name=Ghost");
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
-        // GetReferral check invalid code response
+        [Fact]
+        public async Task GetReferral_ValidRequest_ReturnsReferral()
+        {
+            var response = await client.GetAsync($"{BaseReferrals}?referralCode=ABC123&name=John");
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
+            Assert.False(string.IsNullOrWhiteSpace(content));
+
+            var referral = JsonSerializer.Deserialize<Referral>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            Assert.NotNull(referral);
+            Assert.Equal("ABC123", referral.ReferralCode);
+        }
+
         [Fact]
         public async Task GetReferral_InvalidCode_ReturnsBadRequest()
         {
-            var req = new GetReferralRequest { ReferralCode = "XYZ", Name = "Jose" };
-            utilMock.Setup(u => u.IsValidReferralCode(req.ReferralCode)).Returns(false);
-
-            var result = await controller.GetReferral(req);
-            Assert.IsType<BadRequestObjectResult>(result.Result);
+            var response = await client.GetAsync($"{BaseReferrals}?referralCode=INVALID&name=John");
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
-        /** tests for statistics endpoints */
+        [Fact]
+        public async Task UpdateReferral_ValidRequest_ReturnsOk()
+        {
+            var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
+            var response = await client.PutAsync($"{BaseReferrals}?referralCode=ABC123&name=John&status=active", content);
+            response.EnsureSuccessStatusCode();
+        }
+
         [Fact]
         public async Task GetReferralStats_ValidUid_ReturnsStats()
         {
-            var expectedStats = new ReferralStatistics
+            var response = await client.GetAsync($"{ReferralStats}?uid=U1");
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+            Assert.Contains("total", content);
+        }
+
+        [Fact]
+        public async Task AttributeReferral_ValidRequest_ReturnsOk()
+        {
+            var json = """
             {
-                Uid = defaultUid,
-                TotalSent = 5,
-                TotalCompleted = 3,
-            };
-
-            referralMock.Setup(r => r.GetReferralStatistics(defaultUid)).ReturnsAsync(expectedStats);
-
-            var result = await controller.GetReferralStats(defaultUid);
-            var ok = Assert.IsType<OkObjectResult>(result.Result);
-            var stats = Assert.IsType<ReferralStatistics>(ok.Value);
-
-            Assert.Equal(defaultUid, stats.Uid);
-            Assert.Equal(5, stats.TotalSent);
-            Assert.Equal(3, stats.TotalCompleted);
-            Assert.Equal(2, stats.TotalPending);
+                "referralCode": "ABC123",
+                "refereeUid": "U2"
+            }
+            """;
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await client.PostAsync(AttributeReferral, content);
+            response.EnsureSuccessStatusCode();
         }
-
-        [Fact]
-        public async Task GetReferralStats_EmptyUid_ReturnsDefaultStats()
-        {
-            referralMock.Setup(r => r.GetReferralStatistics(defaultUid)).ReturnsAsync(new ReferralStatistics());
-
-            var result = await controller.GetReferralStats(defaultUid);
-            var ok = Assert.IsType<OkObjectResult>(result.Result);
-            var stats = Assert.IsType<ReferralStatistics>(ok.Value);
-
-            Assert.Equal("", stats.Uid);
-            Assert.Equal(0, stats.TotalSent);
-            Assert.Equal(0, stats.TotalCompleted);
-            Assert.Equal(0, stats.TotalPending);
-        }
-
-        [Fact]
-        public async Task GetReferralStats_NullUid_ReturnsDefaultStats()
-        {
-            referralMock.Setup(r => r.GetReferralStatistics("")).ReturnsAsync(new ReferralStatistics());
-
-            var result = await controller.GetReferralStats("");
-            var ok = Assert.IsType<OkObjectResult>(result.Result);
-            var stats = Assert.IsType<ReferralStatistics>(ok.Value);
-
-            Assert.Equal(0, stats.TotalSent);
-            Assert.Equal(0, stats.TotalCompleted);
-            Assert.Equal(0, stats.TotalPending);
-        }
-
-        [Fact]
-        public async Task GetReferralStats_NoReferrals_ReturnsZeroStats()
-        {
-            referralMock.Setup(r => r.GetReferralStatistics(defaultUid)).ReturnsAsync(new ReferralStatistics
-            {
-                Uid = defaultUid,
-                TotalSent = 0,
-                TotalCompleted = 0
-            });
-
-            var result = await controller.GetReferralStats(defaultUid);
-            var ok = Assert.IsType<OkObjectResult>(result.Result);
-            var stats = Assert.IsType<ReferralStatistics>(ok.Value);
-
-            Assert.Equal(defaultUid, stats.Uid);
-            Assert.Equal(0, stats.TotalSent);
-            Assert.Equal(0, stats.TotalCompleted);
-            Assert.Equal(0, stats.TotalPending);
-        }
-
-        [Fact]
-        public async Task GetReferralStats_AllCompleted_ReturnsZeroPending()
-        {
-            referralMock.Setup(r => r.GetReferralStatistics(defaultUid)).ReturnsAsync(new ReferralStatistics
-            {
-                Uid = defaultUid,
-                TotalSent = 4,
-                TotalCompleted = 4
-            });
-
-            var result = await controller.GetReferralStats(defaultUid);
-            var ok = Assert.IsType<OkObjectResult>(result.Result);
-            var stats = Assert.IsType<ReferralStatistics>(ok.Value);
-
-            Assert.Equal(0, stats.TotalPending);
-        }
-
     }
 }

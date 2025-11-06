@@ -9,11 +9,10 @@ using FluentValidation.AspNetCore;
 using Infrastructure;
 using Infrastructure.Repository;
 using Microsoft.EntityFrameworkCore;
-using System.Configuration;
 
 namespace API
 {
-    public class Program
+    public partial class Program
     {
         public static void Main(string[] args)
         {
@@ -39,7 +38,11 @@ namespace API
             builder.Services.AddSwaggerGen();
 
             // Add all validators
-            builder.Services.AddValidatorsFromAssembly(typeof(IValidator<>).Assembly);
+            builder.Services.AddValidatorsFromAssemblyContaining<GetReferralRequestValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<PrepareMessageRequestValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<ReferralAddRequestValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<ReferralAttributionRequestValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<UpdateReferralRequestValidator>();
             builder.Services.AddFluentValidationAutoValidation();
 
             var app = builder.Build();
