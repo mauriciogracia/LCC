@@ -73,7 +73,7 @@ namespace Tests
             var request = new ReferralAddRequest
             {
                 Uid = "U1",
-                Name = "John",
+                Name = "John 2", //to avoid adding the same in other tests
                 Method = ReferralMethod.EMAIL, 
                 ReferralCode = "ABC123"
             };
@@ -123,16 +123,36 @@ namespace Tests
         [Fact]
         public async Task GetReferral_ValidRequest_ReturnsReferral()
         {
+            // ✅ Ensure referral exists
+            var addRequest = new ReferralAddRequest
+            {
+                Uid = "U1",
+                Name = "John",
+                Method = ReferralMethod.EMAIL,
+                ReferralCode = "ABC123"
+            };
+
+            var addJson = JsonSerializer.Serialize(addRequest);
+            var addContent = new StringContent(addJson, Encoding.UTF8, "application/json");
+
+            var addResponse = await client.PostAsync(BaseReferrals, addContent);
+            addResponse.EnsureSuccessStatusCode();
+
+            // ✅ Now test retrieval
             var response = await client.GetAsync($"{BaseReferrals}?referralCode=ABC123&name=John");
-            response.EnsureSuccessStatusCode();
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
             var content = await response.Content.ReadAsStringAsync();
             Assert.False(string.IsNullOrWhiteSpace(content));
 
-            var referral = JsonSerializer.Deserialize<Referral>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var referral = JsonSerializer.Deserialize<Referral>(
+                content,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
             Assert.NotNull(referral);
             Assert.Equal("ABC123", referral.ReferralCode);
         }
+
 
         [Fact]
         public async Task GetReferral_InvalidCode_ReturnsBadRequest()
