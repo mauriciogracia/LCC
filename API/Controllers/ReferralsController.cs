@@ -29,7 +29,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        [HttpGet("referrals/list/{uid}")]
+        [HttpGet("list/{uid}")]
         public async Task<ActionResult<IEnumerable<Referral>>> GetReferrals(string uid)
         {
             if (string.IsNullOrEmpty(uid))
@@ -48,7 +48,7 @@ namespace API.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
 
-        [HttpPost("referrals")]
+        [HttpPost]
         public async Task<ActionResult<bool>> AddReferral([FromBody] ReferralAddRequest request)
         {
             bool result = await referrals.AddReferral(new Referral(request.Uid, request.Name, request.Method, request.ReferralCode));
@@ -61,7 +61,7 @@ namespace API.Controllers
         /// <param name="method"></param>
         /// <param name="referralCode"></param>
         /// <returns></returns>
-        [HttpGet("referrals/invite-msg")]
+        [HttpGet("invite-msg")]
         public ActionResult<string> PrepareMessage([FromQuery] PrepareMessageRequest pmr)
         {
             bool isValidCode = util.IsValidReferralCode(pmr.ReferralCode);
@@ -77,7 +77,7 @@ namespace API.Controllers
             return Ok(inviteMessage);
         }
 
-        [HttpGet("referrals")]
+        [HttpGet]
         public async Task<ActionResult<Referral>> GetReferral([FromQuery] GetReferralRequest grr)
         {
             if (!util.IsValidReferralCode(grr.ReferralCode))
@@ -98,7 +98,7 @@ namespace API.Controllers
         }
 
         //ASP.NET Core sometimes fails to bind [FromQuery] complex objects in PUT requests — even when the query string is correct
-        [HttpPut("referrals")]
+        [HttpPut]
         public async Task<ActionResult<bool>> UpdateReferral(
     [FromQuery] string referralCode,
     [FromQuery] string name,
@@ -109,7 +109,7 @@ namespace API.Controllers
             return Ok(succeeded);
         }
 
-        [HttpGet("referrals/stats")]
+        [HttpGet("stats")]
         public async Task<ActionResult<ReferralStatistics>> GetReferralStats([FromQuery] string uid)
         {
             var stats = await referrals.GetReferralStatistics(uid);

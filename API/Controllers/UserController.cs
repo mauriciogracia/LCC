@@ -17,9 +17,9 @@ namespace API.Controllers
         readonly IUserFeatures users;
         readonly IUtilFeatures util;
 
-        public UserController(IUserFeatures usrs, IUtilFeatures utilService, ILog logger)
+        public UserController(IUserFeatures userService, IUtilFeatures utilService, ILog logger)
         {
-            users = usrs;
+            users = userService;
             util = utilService;
             log = logger;
         }
@@ -30,15 +30,20 @@ namespace API.Controllers
         /// <param name="uid"></param>
         /// <returns></returns>
         [HttpGet("code/{uid}")]
-        public async Task<ActionResult<string>> GetReferralCode(string uid)
+        public async Task<ActionResult<ApiResponse<string>>> GetReferralCode(string uid)
         {
             if (string.IsNullOrWhiteSpace(uid))
             {
                 return BadRequest("UID cannot be empty.");
             }
 
-            var code = await users.GetUserReferralCode(uid);
-            return Ok(code);
+            ApiResponse<string> resp = new ApiResponse<string>
+            {
+                Success = true,
+                Data = await users.GetUserReferralCode(uid),
+            };
+
+            return Ok(resp);
         }
 
         /// <summary>
@@ -47,22 +52,37 @@ namespace API.Controllers
         /// <param name="referralCode"></param>
         /// <returns></returns>
         [HttpGet("validate/{referralCode}")]
-        public bool ValidateReferralCode(string referralCode)
+        public ActionResult<ApiResponse<bool>> ValidateReferralCode(string referralCode)
         {
-            return util.IsValidReferralCode(referralCode);
+            bool isValid = util.IsValidReferralCode(referralCode);
+
+            ApiResponse<bool> resp = new ApiResponse<bool>
+            {
+                Success = isValid,
+                Data = isValid,
+            };
+
+            return Ok(resp);
         }
 
 
         /// <summary>
-        /// Atributes that a referral has signed up and credits that to the stats of the user
+        /// Attribute that a referred persona has signed up and credit that to the stats of the user
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost("attribute")]
-        public async Task<ActionResult<bool>> AttributeReferral([FromBody] ReferralAttributionRequest request)
+        public async Task<ActionResult<ApiResponse<bool>>> AttributeReferral([FromBody] ReferralAttributionRequest request)
         {
             var result = await users.AttributeReferral(request.ReferralCode, request.RefereeUid);
-            return Ok(result);
+
+            ApiResponse<bool> resp = new ApiResponse<bool>
+            {
+                Success = result,
+                Data = result,
+            };
+
+            return Ok(resp);
         }
     }
 }
