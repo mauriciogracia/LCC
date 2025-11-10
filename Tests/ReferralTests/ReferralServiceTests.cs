@@ -6,7 +6,7 @@ using Infrastructure;
 using Infrastructure.Repository;
 using Microsoft.EntityFrameworkCore;
 
-namespace Tests
+namespace ReferralTests
 {
     public class ReferralServiceTests
     {

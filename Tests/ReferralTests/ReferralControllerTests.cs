@@ -1,27 +1,24 @@
 ﻿using API;
 using Application.DTO;
 using Domain.Entities;
-using Infrastructure;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Tests;
 
-namespace Tests
+namespace ReferralTests
 {
     public class ReferralsControllerTests : IClassFixture<WebApplicationFactory<Program>>
     {
         private readonly HttpClient client;
 
         // endpoint URLs
-        private const string BaseReferrals = "/api/referrals";
-        private const string CodeByUid = "/api/referrals/code/";
-        private const string ValidateCode = "/api/referrals/validate/";
-        private const string ReferralListByUid = "/api/referrals/list/";
-        private const string InviteMessage = "/api/referrals/invite-msg";
-        private const string ReferralStats = "/api/referrals/stats";
-        private const string AttributeReferral = "/api/attribute";
+        private const string ReferralsBase = "/api/referrals";
+
+        private const string ReferralListByUid = ReferralsBase + "/list";
+        private const string InviteMessage = ReferralsBase + "/invite-msg";
+        private const string ReferralStats = ReferralsBase + "/stats";
 
         private const string defaultUid = "U1";
         private const string defaultReferralCode = "NAQXC0";
@@ -30,47 +27,6 @@ namespace Tests
         {
             var factory = new CustomWebApplicationFactory();
             client = factory.CreateClient();
-        }
-
-        [Fact]
-        public void SeededUsers_ArePresent()
-        {
-            // Arrange
-            var factory = new CustomWebApplicationFactory();
-            using var scope = factory.Services.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<ReferralDbContext>();
-
-            // Act
-            var users = context.Users.ToList();
-
-            // Assert
-            Assert.Equal(5, users.Count);
-            Assert.Contains(users, u => u.Uid == defaultUid && u.Name == "María Gómez");
-            Assert.Contains(users, u => u.Uid == "U5" && u.Email == "sofia.ramirez@mgg.com");
-        }
-
-        [Fact]
-        public async Task GetReferralCode_ValidUid_ReturnsCode()
-        {
-            var response = await client.GetAsync(CodeByUid + "U1");
-            response.EnsureSuccessStatusCode();
-            var code = await response.Content.ReadAsStringAsync();
-            Assert.Equal(defaultReferralCode, code);
-        }
-
-        [Fact]
-        public async Task GetReferralCode_EmptyUid_ReturnsBadRequest()
-        {
-            var response = await client.GetAsync(CodeByUid + " ");
-            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        }
-
-        [Fact]
-        public async Task ValidateReferralCode_Valid_ReturnsTrue()
-        {
-            var response = await client.GetAsync(ValidateCode + defaultReferralCode);
-            var result = await response.Content.ReadAsStringAsync();
-            Assert.Equal("true", result);
         }
 
         [Fact]
@@ -95,13 +51,13 @@ namespace Tests
             var content = await utilGetReferrals(defaultUid);
             Assert.True(content == "[]");
 
-            var response = await utilddReferral(defaultUid, "Alice", ReferralMethod.EMAIL);
+            var response = await utilCreateReferral(defaultUid, "Alice", ReferralMethod.EMAIL);
             response.EnsureSuccessStatusCode();
 
             content = await utilGetReferrals(defaultUid);
             Assert.Contains("Alice", content);
 
-            response = await utilddReferral(defaultUid, "Joseph", ReferralMethod.EMAIL);
+            response = await utilCreateReferral(defaultUid, "Joseph", ReferralMethod.EMAIL);
             response.EnsureSuccessStatusCode();
 
             content = await utilGetReferrals(defaultUid);
@@ -117,7 +73,7 @@ namespace Tests
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
-        private async Task<System.Net.Http.HttpResponseMessage> utilddReferral(string uid, string name, ReferralMethod method)
+        private async Task<HttpResponseMessage> utilCreateReferral(string uid, string name, ReferralMethod method)
         {
             var request = new ReferralAddRequest
             {
@@ -136,7 +92,7 @@ namespace Tests
         [Fact]
         public async Task AddReferral_ValidRequest_ReturnsTrue()
         {
-            var response = await utilddReferral(defaultUid, "Carlos", ReferralMethod.EMAIL);
+            var response = await utilCreateReferral(defaultUid, "Carlos", ReferralMethod.EMAIL);
             response.EnsureSuccessStatusCode();
 
             var result = await response.Content.ReadAsStringAsync();
@@ -148,7 +104,7 @@ namespace Tests
         {
             var json = "{}";
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await client.PostAsync(BaseReferrals, content);
+            var response = await client.PostAsync(ReferralsBase, content);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
@@ -171,17 +127,17 @@ namespace Tests
         [Fact]
         public async Task GetReferral_NotFound_ReturnsNotFound()
         {
-            var response = await client.GetAsync($"{BaseReferrals}?referralCode=ABC999&name=Ghost");
+            var response = await client.GetAsync($"{ReferralsBase}?referralCode=ABC999&name=Ghost");
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
         [Fact]
         public async Task GetReferral_ValidRequest_ReturnsReferral()
         {
-            var addResponse = await utilddReferral(defaultUid, "John", ReferralMethod.EMAIL);
+            var addResponse = await utilCreateReferral(defaultUid, "John", ReferralMethod.EMAIL);
             addResponse.EnsureSuccessStatusCode();
 
-            var response = await client.GetAsync($"{BaseReferrals}?referralCode="+ defaultReferralCode + "&name=John");
+            var response = await client.GetAsync($"{ReferralsBase}?referralCode=" + defaultReferralCode + "&name=John");
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
             var content = await response.Content.ReadAsStringAsync();
@@ -199,7 +155,7 @@ namespace Tests
         [Fact]
         public async Task GetReferral_InvalidCode_ReturnsBadRequest()
         {
-            var response = await client.GetAsync($"{BaseReferrals}?referralCode=INVALID&name=John");
+            var response = await client.GetAsync($"{ReferralsBase}?referralCode=INVALID&name=John");
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
@@ -207,7 +163,7 @@ namespace Tests
         public async Task UpdateReferral_ValidRequest_ReturnsOk()
         {
             var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
-            var response = await client.PutAsync($"{BaseReferrals}?referralCode=ABC123&name=John&status=active", content);
+            var response = await client.PutAsync($"{ReferralsBase}?referralCode=ABC123&name=John&status=active", content);
             response.EnsureSuccessStatusCode();
         }
 
@@ -218,20 +174,6 @@ namespace Tests
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
             Assert.Contains("total", content);
-        }
-
-        [Fact]
-        public async Task AttributeReferral_ValidRequest_ReturnsOk()
-        {
-            var json = $$"""
-            {
-                "referralCode": "{{defaultReferralCode}}",
-                "refereeUid": "U2"
-            }
-            """;
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await client.PostAsync(AttributeReferral, content);
-            response.EnsureSuccessStatusCode();
         }
     }
 }

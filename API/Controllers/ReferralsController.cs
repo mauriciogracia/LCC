@@ -9,13 +9,12 @@ namespace API.Controllers
     /// <summary>
     /// Referral Controller that exposes REST endpoints 
     /// </summary>
-    [Route("api/")]
+    [Route("api/[controller]")]
     [ApiController]
     public class ReferralsController : ControllerBase
     {
         readonly ILog log;
         readonly IReferralFeatures referrals;
-        readonly IUserFeatures users;
         readonly IUtilFeatures util;
 
         public ReferralsController(IReferralFeatures referral, IUtilFeatures utilService, ILog logger)
@@ -23,28 +22,6 @@ namespace API.Controllers
             referrals = referral;
             util = utilService;
             log = logger;
-        }
-
-        /// <summary>
-        /// referralCode = GetUniqueReferralCode (uid) 
-        /// </summary>
-        /// <param name="uid"></param>
-        /// <returns></returns>
-        [HttpGet("referrals/code/{uid}")]
-        public async Task<ActionResult<string>> GetReferralCode(string uid)
-        {
-            if (string.IsNullOrWhiteSpace(uid))
-            {
-                return BadRequest("UID cannot be empty.");
-            }
-
-            var code = await users.GetUserReferralCode(uid);
-            return Ok(code);
-        }
-        [HttpGet("referrals/validate/{referralCode}")]
-        public bool ValidateReferralCode(string referralCode)
-        {
-            return util.IsValidReferralCode(referralCode);
         }
 
         /// <summary>
@@ -137,13 +114,6 @@ namespace API.Controllers
         {
             var stats = await referrals.GetReferralStatistics(uid);
             return Ok(stats);
-        }
-
-        [HttpPost("attribute")]
-        public async Task<ActionResult<bool>> AttributeReferral([FromBody] ReferralAttributionRequest request)
-        {
-            var result = await users.AttributeReferral(request.ReferralCode, request.RefereeUid);
-            return Ok(result);
         }
     }
 }
