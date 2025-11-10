@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using Application.DTO;
+using Domain.Entities;
 
 namespace Application.Validators
 {

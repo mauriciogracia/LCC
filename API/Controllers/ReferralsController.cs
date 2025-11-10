@@ -1,6 +1,6 @@
 ﻿using Application.DTO;
 using Application.Interfaces;
-using Domain;
+using Domain.Entities;
 using Domain.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,6 +15,7 @@ namespace API.Controllers
     {
         readonly ILog log;
         readonly IReferralFeatures referrals;
+        readonly IUserFeatures users;
         readonly IUtilFeatures util;
 
         public ReferralsController(IReferralFeatures referral, IUtilFeatures utilService, ILog logger)
@@ -37,7 +38,7 @@ namespace API.Controllers
                 return BadRequest("UID cannot be empty.");
             }
 
-            var code = await referrals.GetUserReferralCode(uid);
+            var code = await users.GetUserReferralCode(uid);
             return Ok(code);
         }
         [HttpGet("referrals/validate/{referralCode}")]
@@ -141,7 +142,7 @@ namespace API.Controllers
         [HttpPost("attribute")]
         public async Task<ActionResult<bool>> AttributeReferral([FromBody] ReferralAttributionRequest request)
         {
-            var result = await referrals.AttributeReferral(request.ReferralCode, request.RefereeUid);
+            var result = await users.AttributeReferral(request.ReferralCode, request.RefereeUid);
             return Ok(result);
         }
     }

@@ -1,11 +1,9 @@
-﻿
-using Domain;
+﻿using Domain.Entities;
 
 namespace Application.Interfaces
 {
     public interface IReferralFeatures
     {
-        Task<string> GetUserReferralCode(string uid);
 
         Task<bool> DeleteUserReferrals(string uid);
 
@@ -18,7 +16,5 @@ namespace Application.Interfaces
         Task<bool> UpdateReferral(string referralCode, string name, ReferralStatus newStatus);
 
         Task<ReferralStatistics> GetReferralStatistics(string uid);
-
-        Task<bool> AttributeReferral(string referralCode, string refereeUid);
     }
 }

@@ -1,6 +1,6 @@
 ﻿using API;
 using Application.DTO;
-using Domain;
+using Domain.Entities;
 using Infrastructure;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;

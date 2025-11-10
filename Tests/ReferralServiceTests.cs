@@ -1,6 +1,6 @@
 ﻿using Application.Interfaces;
 using Application.Services;
-using Domain;
+using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructure;
 using Infrastructure.Repository;
@@ -11,6 +11,7 @@ namespace Tests
     public class ReferralServiceTests
     {
         private readonly ILog _log;
+        private readonly UserService users;
         private readonly ReferralService referrals;
         private readonly IUtilFeatures util;
         private readonly string defaultUid = "U1";
@@ -32,7 +33,8 @@ namespace Tests
             var userRepo = new UserRepository(dbContext);
             var referralRepo = new ReferralRepository(dbContext);
             util = new UtilService();
-            referrals = new ReferralService(userRepo, referralRepo, _log, util);
+            users = new UserService(userRepo, _log, util);
+            referrals = new ReferralService(referralRepo, _log, util);
         }
 
         [Fact]
@@ -48,7 +50,7 @@ namespace Tests
         [Fact]
         public async void ValidateReferralCode()
         {
-            string code = await referrals.GetUserReferralCode(defaultUid);
+            string code = await users.GetUserReferralCode(defaultUid);
 
             Assert.True(util.IsValidReferralCode(code));
         }
@@ -56,8 +58,8 @@ namespace Tests
         [Fact]
         public async void SameReferralCodePerUser()
         {
-            string code1 = await referrals.GetUserReferralCode(defaultUid);
-            string code2 = await referrals.GetUserReferralCode(defaultUid);
+            string code1 = await users.GetUserReferralCode(defaultUid);
+            string code2 = await users.GetUserReferralCode(defaultUid);
 
             Assert.Equal(code1, code2);
             Assert.Equal(6, code1.Length);
@@ -66,9 +68,9 @@ namespace Tests
         [Fact]
         public async void UniqueReferralPerUser()
         {
-            string code1 = await referrals.GetUserReferralCode(defaultUid);
-            string code2 = await referrals.GetUserReferralCode("uid456");
-            string code3 = await referrals.GetUserReferralCode(defaultUid);
+            string code1 = await users.GetUserReferralCode(defaultUid);
+            string code2 = await users.GetUserReferralCode("uid456");
+            string code3 = await users.GetUserReferralCode(defaultUid);
 
             Assert.NotEqual(code1, code2);
             Assert.Equal(code1, code3);

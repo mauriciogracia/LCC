@@ -2,7 +2,7 @@
 using Application.Interfaces;
 using Application.Services;
 using Application.Validators;
-using Domain;
+using Domain.Entities;
 using Domain.Interfaces;
 using FluentValidation;
 using FluentValidation.AspNetCore;

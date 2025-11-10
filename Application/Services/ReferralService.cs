@@ -1,54 +1,23 @@
 ﻿using Application.Interfaces;
-using Domain;
+using Domain.Entities;
 using Domain.Interfaces;
 
 namespace Application.Services
 {
     public class ReferralService : IReferralFeatures
     {
-        private readonly IRepository<User> users;
         private readonly IRepository<Referral> referrals;
         private readonly IUtilFeatures util;
         ILog log;
 
-        public ReferralService(IRepository<User> usersRepo, IRepository<Referral> referralsRepo, ILog logger, IUtilFeatures UtilFeatures)
+        public ReferralService(IRepository<Referral> referralsRepo, ILog logger, IUtilFeatures UtilFeatures)
         {
-            users = usersRepo;
             referrals = referralsRepo;
             util = UtilFeatures;
             log = logger;
         }
 
-        /// <summary>
-        /// In real life the uid must already exist, since I'm mocking the service
-        /// when a UID does not exist, it will be added to simplify flow
-        /// </summary>
-        /// <param name="uid"></param>
-        /// <returns></returns>
-        public async Task<string> GetUserReferralCode(string uid)
-        {
-            string code = "";
-            User? usr = await users.GetByIdAsync(uid);
-
-            if (usr == null)
-            {
-                log.error($"User with {uid} does not exist");
-            }
-            else
-            {
-                //generate referral code the 1st time
-                if(string.IsNullOrEmpty(usr.ReferralCode))
-                {
-                    usr.ReferralCode = util.PrepareReferralCode(uid);
-                    await users.UpdateAsync(usr);
-                }
-
-                code = usr.ReferralCode;
-                log.info($"user exists with refCode: {usr.ReferralCode}");
-            }
-            
-            return code;
-        }
+        
         public async Task<IEnumerable<Referral>> GetReferralsByUserIdAsync(string uid)
         {
             var allReferrals = await referrals.GetAllAsync();
@@ -156,22 +125,7 @@ namespace Application.Services
             };
         }
 
-        public async Task<bool> AttributeReferral(string referralCode, string refereeUid)
-        {
-            var referee = await users.GetByIdAsync(refereeUid);
-
-            if (referee == null)
-            {
-                log.error($"Referee not found: {refereeUid}");
-                return false;
-            }
-
-            referee.ReferralCode = referralCode;
-            await users.UpdateAsync(referee);
-
-            log.info($"Referral code {referralCode} attributed to user {refereeUid}");
-            return true;
-        }
+        
 
     }
 }

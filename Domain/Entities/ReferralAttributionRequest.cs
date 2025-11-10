@@ -1,4 +1,4 @@
-﻿namespace Application.DTO
+﻿namespace Domain.Entities
 {
     public class ReferralAttributionRequest
     {
