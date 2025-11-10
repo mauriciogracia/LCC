@@ -109,7 +109,7 @@ namespace API.Controllers
                 return BadRequest(msg);
             }
 
-            var referral = await referrals.GetReferral(grr.ReferralCode, grr.Name);
+            var referral = referrals.GetReferral(grr.ReferralCode, grr.Name);
 
             if (referral == null)
             {

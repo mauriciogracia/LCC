@@ -99,7 +99,7 @@ namespace Application.Services
             bool success = false;
             string uid = referral.Uid;
 
-            var refExists = await referrals.GetByFilterAsync(r => r.Name == referral.Name && r.Method == referral.Method);
+            var refExists = referrals.GetByFilter(r => r.Name == referral.Name && r.Method == referral.Method);
 
             if (refExists.Any())
             {
@@ -118,7 +118,7 @@ namespace Application.Services
         public async Task<bool> UpdateReferral(string referralCode, string name, ReferralStatus newStatus)
         {
             bool success = false;
-            Referral? referral = await GetReferral(referralCode, name);
+            Referral? referral = GetReferral(referralCode, name);
 
                 if (referral == null)
                 {
@@ -135,9 +135,9 @@ namespace Application.Services
                 return success;
         }
 
-        public async Task<Referral?> GetReferral(string referralCode, string name)
+        public Referral GetReferral(string referralCode, string name)
         {
-            var matches = await referrals.GetByFilterAsync(r => r.ReferralCode == referralCode && r.Name == name);
+            var matches = referrals.GetByFilter(r => r.ReferralCode == referralCode && r.Name == name);
             var result = matches.FirstOrDefault();
             return result;
         }

@@ -71,7 +71,7 @@ namespace Tests
             await context.SaveChangesAsync();
 
             var repository = new UserRepository(context);
-            var result = await repository.GetByFilterAsync(u => u.Name.StartsWith("A"));
+            var result = repository.GetByFilter(u => u.Name.StartsWith("A"));
 
             Assert.Single(result);
             Assert.Equal("Alice", result.First().Name);

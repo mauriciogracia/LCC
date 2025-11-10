@@ -1,6 +1,7 @@
 ﻿using Domain;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace Infrastructure.Repository
 {
@@ -47,13 +48,9 @@ namespace Infrastructure.Repository
             }
         }
 
-        public Task<IEnumerable<Referral>> GetByFilterAsync(Func<Referral, bool> predicate)
+        public IQueryable<Referral> GetByFilter(Expression<Func<Referral, bool>> predicate)
         {
-            var result = _context.Referrals
-                .AsEnumerable() // needed for Func to work ;-)
-                .Where(predicate);
-
-            return Task.FromResult(result);
+            return _context.Referrals.Where(predicate);
         }
     }
 }

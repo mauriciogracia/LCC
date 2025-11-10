@@ -13,7 +13,7 @@ namespace Application.Interfaces
 
         Task<bool> AddReferral(Referral referral);
 
-        Task<Referral?> GetReferral(string referralCode, string name);
+        Referral? GetReferral(string referralCode, string name);
 
         Task<bool> UpdateReferral(string referralCode, string name, ReferralStatus newStatus);
 

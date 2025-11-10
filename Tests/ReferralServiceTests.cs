@@ -137,7 +137,7 @@ namespace Tests
             Referral refA = new Referral(defaultUid, referralName, ReferralMethod.SMS, refCode);
             bool success = await referrals.AddReferral(refA);
             Assert.True(success);
-            Referral? refB = await referrals.GetReferral(refCode, referralName);
+            Referral? refB = referrals.GetReferral(refCode, referralName);
             Assert.Equal(refA, refB);
         }
 
@@ -145,7 +145,7 @@ namespace Tests
         public async void NonReferredPersonWorks()
         {
             await referrals.DeleteUserReferrals(defaultUid);
-            Referral? refB = await referrals.GetReferral(refCode, referralName);
+            Referral? refB = referrals.GetReferral(refCode, referralName);
 
             Assert.True(refB == null);
         }
@@ -158,14 +158,14 @@ namespace Tests
 
             success = await referrals.UpdateReferral(refA.ReferralCode, referralName, ReferralStatus.Started);
             Assert.True(success);
-            Referral? refB = await referrals.GetReferral(refCode, referralName);
+            Referral? refB = referrals.GetReferral(refCode, referralName);
 
             Assert.NotNull(refB);
             Assert.True(refB.Status == ReferralStatus.Started);
 
             success = await referrals.UpdateReferral(refA.ReferralCode, referralName, ReferralStatus.Completed);
             Assert.True(success);
-            Referral? refC = await referrals.GetReferral(refCode, referralName);
+            Referral? refC = referrals.GetReferral(refCode, referralName);
 
             Assert.NotNull(refC);
             Assert.True(refC.Status == ReferralStatus.Completed);

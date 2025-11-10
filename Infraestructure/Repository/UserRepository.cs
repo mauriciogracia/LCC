@@ -1,6 +1,8 @@
 ﻿using Domain;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace Infrastructure.Repository
 {
@@ -19,13 +21,9 @@ namespace Infrastructure.Repository
             if (user != null) { _context.Users.Remove(user); await _context.SaveChangesAsync(); }
         }
 
-        public Task<IEnumerable<User>> GetByFilterAsync(Func<User, bool> predicate)
+        public IQueryable<User> GetByFilter(Expression<Func<User, bool>> predicate)
         {
-            var result = _context.Users
-                .AsEnumerable() // needed for Func to work ;-)
-                .Where(predicate);
-
-            return Task.FromResult(result);
+            return _context.Users.Where(predicate);
         }
     }
 }
