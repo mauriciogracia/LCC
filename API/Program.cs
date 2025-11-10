@@ -28,8 +28,6 @@ namespace API
             builder.Services.AddDbContext<ReferralDbContext>(options =>
             options.UseInMemoryDatabase("ReferralDb"));
             
-            builder.Services.AddScoped<ExceptionHandlingMiddleware>();
-
             builder.Services.AddControllers();
 
             
@@ -46,6 +44,7 @@ namespace API
 
             var app = builder.Build();
 
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
             // Enable Swagger in development
             if (app.Environment.IsDevelopment())
             {
