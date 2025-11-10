@@ -42,6 +42,9 @@ namespace API
             builder.Services.AddValidatorsFromAssemblyContaining<ReferralAttributionRequestValidator>();
             builder.Services.AddFluentValidationAutoValidation();
 
+            //Inject the precise implementation of Middleware
+            builder.Services.AddScoped<ExceptionHandlingMiddleware>();
+
             var app = builder.Build();
 
             app.UseMiddleware<ExceptionHandlingMiddleware>();
