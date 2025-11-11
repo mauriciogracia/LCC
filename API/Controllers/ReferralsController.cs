@@ -29,7 +29,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        [HttpGet("list/{uid}")]
+        [HttpGet("{uid}/referrals/")]
         public async Task<ActionResult<IEnumerable<Referral>>> GetReferrals(string uid)
         {
             if (string.IsNullOrEmpty(uid))
@@ -62,7 +62,7 @@ namespace API.Controllers
         /// <param name="method"></param>
         /// <param name="referralCode"></param>
         /// <returns></returns>
-        [HttpGet("invite-msg")]
+        [HttpGet("invite-message")]
         public ActionResult<ApiResponse<string>> PrepareMessage([FromQuery] PrepareMessageRequest pmr)
         {
             //TODO MGG - use ApiResponse
@@ -99,8 +99,8 @@ namespace API.Controllers
             return Ok(referral);
         }
 
-        [HttpPut]
-        public async Task<ActionResult<ApiResponse<bool>>> UpdateReferral(ReferralUpdateRequest rur)
+        [HttpPut("{referralId}")]
+        public async Task<ActionResult<ApiResponse<bool>>> UpdateReferral(string referralId, [FromBody] ReferralUpdateRequest rur)
         {
             bool success;
 
@@ -116,7 +116,7 @@ namespace API.Controllers
             return Ok(resp);
         }
 
-        [HttpGet("stats")]
+        [HttpGet("statistics")]
         public async Task<ActionResult<ReferralStatistics>> GetReferralStats([FromQuery] string uid)
         {
             var stats = await referrals.GetReferralStatistics(uid);

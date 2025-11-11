@@ -50,7 +50,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="referralCode"></param>
         /// <returns></returns>
-        [HttpGet("validate")]
+        [HttpGet("{code}/validation")]
         public ActionResult<ApiResponse<bool>> ValidateReferralCode([FromQuery] string code)
         {
             bool isValid = util.IsValidReferralCode(code);
@@ -70,7 +70,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        [HttpPatch("{uid}/stats")]
+        [HttpPatch("{uid}/statistics")]
         public async Task<ActionResult<ApiResponse<bool>>> AttributeReferral([FromRoute] string uid, [FromBody] ReferralAttributionRequest request)
         {
             var result = await users.AttributeReferral(request.ReferralCode, uid);

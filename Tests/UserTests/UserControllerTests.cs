@@ -3,6 +3,7 @@ using Application.DTO;
 using Infrastructure;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using System.Net;
 using System.Text;
 using Tests;
@@ -17,7 +18,6 @@ namespace UserTests
         private const string UserBase = "/api/user";
         private const string ReferralCode = UserBase + "/code/";
         private const string ValidateCode = UserBase + "/validate/";
-        private const string AttributeReferral = UserBase + "/attribute/";
 
         private const string defaultUid = "U1";
         private const string defaultReferralCode = "NAQXC0";
@@ -86,7 +86,8 @@ namespace UserTests
             };
             var json = System.Text.Json.JsonSerializer.Serialize(request);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await client.PostAsync(AttributeReferral, content);
+            var url = $"{UserBase}/{request.RefereeUid}/statistics";
+            var response = await client.PatchAsync(url, content);
             response.EnsureSuccessStatusCode();
         }
     }

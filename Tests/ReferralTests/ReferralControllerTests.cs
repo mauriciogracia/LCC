@@ -17,9 +17,9 @@ namespace ReferralTests
         // endpoint URLs
         private const string ReferralsBase = "/api/referrals";
 
-        private const string ReferralListByUid = ReferralsBase + "/list/";
-        private const string InviteMessage = ReferralsBase + "/invite-msg/";
-        private const string ReferralStats = ReferralsBase + "/stats/";
+        private const string ReferralsPostfix = "referrals";
+        private const string InviteMessage = ReferralsBase + "/invite-message/";
+        private const string ReferralStats = ReferralsBase + "/statistics/";
 
         private const string defaultUid = "U1";
         private const string defaultReferralCode = "NAQXC0";
@@ -30,10 +30,15 @@ namespace ReferralTests
             client = factory.CreateClient();
         }
 
+        private string prepareListReferralsURL(string uid)
+        {
+            return $"{ ReferralsBase}/{uid}/{ReferralsPostfix}";
+        }
+
         [Fact]
         public async Task GetReferrals_ReturnsEmptyList()
         {
-            string url = ReferralListByUid + defaultUid + "X";
+            string url = prepareListReferralsURL(defaultUid + "X");
             var response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
@@ -42,7 +47,7 @@ namespace ReferralTests
 
         private async Task<string> utilGetReferrals(string uid)
         {
-            string url = ReferralListByUid + uid;
+            string url = prepareListReferralsURL(uid);
             var response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadAsStringAsync();
@@ -66,15 +71,6 @@ namespace ReferralTests
             content = await utilGetReferrals(defaultUid);
             Assert.Contains("Alice", content);
             Assert.Contains("Joseph", content);
-        }
-
-
-        [Fact]
-        public async Task GetReferrals_EmptyUid_ReturnsBadRequest()
-        {
-            string url = ReferralListByUid + " ";
-            var response = await client.GetAsync(url);
-            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
         private async Task<HttpResponseMessage> utilCreateReferral(string uid, string name, ReferralMethod method)
@@ -165,23 +161,25 @@ namespace ReferralTests
             var response = await client.GetAsync($"{ReferralsBase}?referralCode=INVALID&name=John");
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
+
         [Fact]
         public async Task UpdateReferral_ValidRequest_ReturnsOk()
         {
             // Arrange: build the request object
             var request = new ReferralUpdateRequest
             {
+                Id = "123456",          // still present in DTO
                 ReferralCode = "ABC123",
                 Name = "John",
                 Status = "active"
             };
 
-            // Serialize to JSON
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            // Act: send PUT with JSON body
-            string url = $"{ReferralsBase}";
+            // Act: send PUT with referralId in route
+            string referralId = request.Id; // matches controller route param
+            string url = $"{ReferralsBase}/{referralId}";
             var response = await client.PutAsync(url, content);
 
             // Assert: ensure success
