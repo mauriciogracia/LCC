@@ -21,6 +21,7 @@ namespace API
             // Add services to the container.
             builder.Services.AddScoped<ILog, ConsoleLogger>();
             builder.Services.AddScoped<IUtilFeatures, UtilService>();
+            builder.Services.AddScoped<IUserFeatures, UserService>();
             builder.Services.AddScoped<IReferralFeatures, ReferralService>();
             builder.Services.AddScoped<IRepository<User>, UserRepository>();
             builder.Services.AddScoped<IRepository<Referral>, ReferralRepository>();

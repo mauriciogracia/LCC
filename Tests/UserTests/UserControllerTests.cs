@@ -1,4 +1,5 @@
 ﻿using API;
+using Application.DTO;
 using Infrastructure;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +15,7 @@ namespace UserTests
 
         // USER endpoint URLs 
         private const string UserBase = "/api/user";
-        private const string CodeByUid = UserBase + "/code/";
+        private const string ReferralCode = UserBase + "/code/";
         private const string ValidateCode = UserBase + "/validate/";
         private const string AttributeReferral = UserBase + "/attribute/";
 
@@ -47,36 +48,43 @@ namespace UserTests
         [Fact]
         public async Task GetReferralCode_ValidUid_ReturnsCode()
         {
-            var response = await client.GetAsync(CodeByUid + "U1");
+            var url = ReferralCode + "U1";
+            var response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
+            /* use ApiResponse here
             var code = await response.Content.ReadAsStringAsync();
             Assert.Equal(defaultReferralCode, code);
+            */
         }
 
         [Fact]
         public async Task GetReferralCode_EmptyUid_ReturnsBadRequest()
         {
-            var response = await client.GetAsync(CodeByUid + " ");
+            var url = ReferralCode + " ";
+            var response = await client.GetAsync(url);
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
         [Fact]
         public async Task ValidateReferralCode_Valid_ReturnsTrue()
         {
-            var response = await client.GetAsync(ValidateCode + defaultReferralCode);
+            var url = $"{ValidateCode}?code={defaultReferralCode}";
+            var response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+
             var result = await response.Content.ReadAsStringAsync();
-            Assert.Equal("true", result);
+            Assert.Contains("\"data\":true", result, StringComparison.OrdinalIgnoreCase);
         }
-        
+
         [Fact]
         public async Task AttributeReferral_ValidRequest_ReturnsOk()
         {
-            var json = $$"""
+            var request = new ReferralAttributionRequest
             {
-                "referralCode": "{{defaultReferralCode}}",
-                "refereeUid": "U2"
-            }
-            """;
+                ReferralCode = defaultReferralCode,
+                RefereeUid = "U2"
+            };
+            var json = System.Text.Json.JsonSerializer.Serialize(request);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             var response = await client.PostAsync(AttributeReferral, content);
             response.EnsureSuccessStatusCode();

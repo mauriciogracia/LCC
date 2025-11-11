@@ -29,7 +29,7 @@ namespace API.Controllers
         /// <param name="uid"></param>
         /// <returns></returns>
         [HttpGet("code/{uid}")]
-        public async Task<ActionResult<ApiResponse<string>>> GetReferralCode(string uid)
+        public async Task<ActionResult<ApiResponse<string>>> GetReferralCode([FromRoute] string uid)
         {
             if (string.IsNullOrWhiteSpace(uid))
             {
@@ -50,12 +50,12 @@ namespace API.Controllers
         /// </summary>
         /// <param name="referralCode"></param>
         /// <returns></returns>
-        [HttpGet("validate/{referralCode}")]
-        public ActionResult<ApiResponse<bool>> ValidateReferralCode(string referralCode)
+        [HttpGet("validate")]
+        public ActionResult<ApiResponse<bool>> ValidateReferralCode([FromQuery] string code)
         {
-            bool isValid = util.IsValidReferralCode(referralCode);
+            bool isValid = util.IsValidReferralCode(code);
 
-            ApiResponse<bool> resp = new ApiResponse<bool>
+            var resp = new ApiResponse<bool>
             {
                 Success = isValid,
                 Data = isValid,
@@ -70,12 +70,12 @@ namespace API.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        [HttpPost("attribute")]
-        public async Task<ActionResult<ApiResponse<bool>>> AttributeReferral([FromBody] ReferralAttributionRequest request)
+        [HttpPatch("{uid}/stats")]
+        public async Task<ActionResult<ApiResponse<bool>>> AttributeReferral([FromRoute] string uid, [FromBody] ReferralAttributionRequest request)
         {
-            var result = await users.AttributeReferral(request.ReferralCode, request.RefereeUid);
+            var result = await users.AttributeReferral(request.ReferralCode, uid);
 
-            ApiResponse<bool> resp = new ApiResponse<bool>
+            var resp = new ApiResponse<bool>
             {
                 Success = result,
                 Data = result,
