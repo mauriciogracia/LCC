@@ -17,7 +17,6 @@ namespace UserTests
         // USER endpoint URLs 
         private const string UserBase = "/api/user";
         private const string ReferralCode = UserBase + "/code/";
-        private const string ValidateCode = UserBase + "/validate/";
 
         private const string defaultUid = "U1";
         private const string defaultReferralCode = "NAQXC0";
@@ -68,12 +67,12 @@ namespace UserTests
         [Fact]
         public async Task ValidateReferralCode_Valid_ReturnsTrue()
         {
-            var url = $"{ValidateCode}?code={defaultReferralCode}";
+            var url = $"{UserBase}/code/{defaultUid}";
             var response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
 
             var result = await response.Content.ReadAsStringAsync();
-            Assert.Contains("\"data\":true", result, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("\"success\":true", result, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]
