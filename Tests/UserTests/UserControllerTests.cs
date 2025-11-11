@@ -14,9 +14,9 @@ namespace UserTests
 
         // USER endpoint URLs 
         private const string UserBase = "/api/user";
-        private const string CodeByUid = UserBase + "/code";
-        private const string ValidateCode = UserBase + "/validate";
-        private const string AttributeReferral = UserBase + "/attribute";
+        private const string CodeByUid = UserBase + "/code/";
+        private const string ValidateCode = UserBase + "/validate/";
+        private const string AttributeReferral = UserBase + "/attribute/";
 
         private const string defaultUid = "U1";
         private const string defaultReferralCode = "NAQXC0";

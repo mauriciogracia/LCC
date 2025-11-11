@@ -49,8 +49,9 @@ namespace API.Controllers
         /// <returns></returns>
 
         [HttpPost]
-        public async Task<ActionResult<bool>> AddReferral([FromBody] ReferralAddRequest request)
+        public async Task<ActionResult<ApiResponse<bool>>> AddReferral([FromBody] ReferralAddRequest request)
         {
+            //TODO MGG - use ApiResponse
             bool result = await referrals.AddReferral(new Referral(request.Uid, request.Name, request.Method, request.ReferralCode));
             return Ok(result);
         }
@@ -62,8 +63,9 @@ namespace API.Controllers
         /// <param name="referralCode"></param>
         /// <returns></returns>
         [HttpGet("invite-msg")]
-        public ActionResult<string> PrepareMessage([FromQuery] PrepareMessageRequest pmr)
+        public ActionResult<ApiResponse<string>> PrepareMessage([FromQuery] PrepareMessageRequest pmr)
         {
+            //TODO MGG - use ApiResponse
             bool isValidCode = util.IsValidReferralCode(pmr.ReferralCode);
 
             if (!isValidCode)
@@ -97,16 +99,21 @@ namespace API.Controllers
             return Ok(referral);
         }
 
-        //ASP.NET Core sometimes fails to bind [FromQuery] complex objects in PUT requests — even when the query string is correct
         [HttpPut]
-        public async Task<ActionResult<bool>> UpdateReferral(
-    [FromQuery] string referralCode,
-    [FromQuery] string name,
-    [FromQuery] string status)
+        public async Task<ActionResult<ApiResponse<bool>>> UpdateReferral(ReferralUpdateRequest rur)
         {
-            Enum.TryParse<ReferralStatus>(status, true, out var rs);
-            var succeeded = await referrals.UpdateReferral(referralCode, name, rs);
-            return Ok(succeeded);
+            bool success;
+
+            Enum.TryParse<ReferralStatus>(rur.Status, true, out var rs);
+            success = await referrals.UpdateReferral(rur.ReferralCode, rur.Name, rs);
+
+            ApiResponse<bool> resp = new ApiResponse<bool>
+            {
+                Success = success,
+                Data = success
+            };
+
+            return Ok(resp);
         }
 
         [HttpGet("stats")]

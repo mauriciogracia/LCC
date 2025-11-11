@@ -2,6 +2,7 @@
 using Application.DTO;
 using Domain.Entities;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Newtonsoft.Json;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -16,9 +17,9 @@ namespace ReferralTests
         // endpoint URLs
         private const string ReferralsBase = "/api/referrals";
 
-        private const string ReferralListByUid = ReferralsBase + "/list";
-        private const string InviteMessage = ReferralsBase + "/invite-msg";
-        private const string ReferralStats = ReferralsBase + "/stats";
+        private const string ReferralListByUid = ReferralsBase + "/list/";
+        private const string InviteMessage = ReferralsBase + "/invite-msg/";
+        private const string ReferralStats = ReferralsBase + "/stats/";
 
         private const string defaultUid = "U1";
         private const string defaultReferralCode = "NAQXC0";
@@ -32,7 +33,8 @@ namespace ReferralTests
         [Fact]
         public async Task GetReferrals_ReturnsEmptyList()
         {
-            var response = await client.GetAsync(ReferralListByUid + defaultUid + "X");
+            string url = ReferralListByUid + defaultUid + "X";
+            var response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
             Assert.True(content == "[]");
@@ -40,7 +42,8 @@ namespace ReferralTests
 
         private async Task<string> utilGetReferrals(string uid)
         {
-            var response = await client.GetAsync(ReferralListByUid + uid);
+            string url = ReferralListByUid + uid;
+            var response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadAsStringAsync();
         }
@@ -69,7 +72,8 @@ namespace ReferralTests
         [Fact]
         public async Task GetReferrals_EmptyUid_ReturnsBadRequest()
         {
-            var response = await client.GetAsync(ReferralListByUid + " ");
+            string url = ReferralListByUid + " ";
+            var response = await client.GetAsync(url);
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
@@ -83,7 +87,7 @@ namespace ReferralTests
                 ReferralCode = defaultReferralCode
             };
 
-            var json = JsonSerializer.Serialize(request);
+            var json = System.Text.Json.JsonSerializer.Serialize(request);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             return await client.PostAsync("/api/referrals", content);
@@ -111,7 +115,8 @@ namespace ReferralTests
         [Fact]
         public async Task PrepareMessage_ValidCode_ReturnsMessage()
         {
-            var response = await client.GetAsync($"{InviteMessage}?method=EMAIL&referralCode=" + defaultReferralCode);
+            string url = $"{InviteMessage}?method=EMAIL&referralCode=" + defaultReferralCode;
+            var response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
             var message = await response.Content.ReadAsStringAsync();
             Assert.Contains(defaultReferralCode, message);
@@ -120,14 +125,16 @@ namespace ReferralTests
         [Fact]
         public async Task PrepareMessage_InvalidCode_ReturnsBadRequest()
         {
-            var response = await client.GetAsync($"{InviteMessage}?method=email&referralCode=INVALID");
+            string url = $"{InviteMessage}?method=email&referralCode=INVALID";
+            var response = await client.GetAsync(url);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
         [Fact]
         public async Task GetReferral_NotFound_ReturnsNotFound()
         {
-            var response = await client.GetAsync($"{ReferralsBase}?referralCode=ABC999&name=Ghost");
+            string url = $"{ReferralsBase}?referralCode=ABC999&name=Ghost";
+            var response = await client.GetAsync(url);
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
@@ -143,7 +150,7 @@ namespace ReferralTests
             var content = await response.Content.ReadAsStringAsync();
             Assert.False(string.IsNullOrWhiteSpace(content));
 
-            var referral = JsonSerializer.Deserialize<Referral>(
+            var referral = System.Text.Json.JsonSerializer.Deserialize<Referral>(
                 content,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
@@ -158,19 +165,34 @@ namespace ReferralTests
             var response = await client.GetAsync($"{ReferralsBase}?referralCode=INVALID&name=John");
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
-
         [Fact]
         public async Task UpdateReferral_ValidRequest_ReturnsOk()
         {
-            var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
-            var response = await client.PutAsync($"{ReferralsBase}?referralCode=ABC123&name=John&status=active", content);
+            // Arrange: build the request object
+            var request = new ReferralUpdateRequest
+            {
+                ReferralCode = "ABC123",
+                Name = "John",
+                Status = "active"
+            };
+
+            // Serialize to JSON
+            var json = JsonConvert.SerializeObject(request);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Act: send PUT with JSON body
+            string url = $"{ReferralsBase}";
+            var response = await client.PutAsync(url, content);
+
+            // Assert: ensure success
             response.EnsureSuccessStatusCode();
         }
 
         [Fact]
         public async Task GetReferralStats_ValidUid_ReturnsStats()
         {
-            var response = await client.GetAsync($"{ReferralStats}?uid=U1");
+            string url = $"{ReferralStats}?uid=U1";
+            var response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
             Assert.Contains("total", content);
