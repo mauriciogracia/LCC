@@ -4,7 +4,7 @@ using Infrastructure.Repository;
 using Infrastructure;
 using Domain.Entities;
 
-namespace Tests
+namespace UserTests
 {
     public class UserRepositoryTests
     {

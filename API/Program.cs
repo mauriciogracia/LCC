@@ -9,6 +9,8 @@ using FluentValidation.AspNetCore;
 using Infrastructure;
 using Infrastructure.Repository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace API
 {
@@ -25,13 +27,13 @@ namespace API
             builder.Services.AddScoped<IReferralFeatures, ReferralService>();
             builder.Services.AddScoped<IRepository<User>, UserRepository>();
             builder.Services.AddScoped<IRepository<Referral>, ReferralRepository>();
-            
+
             builder.Services.AddDbContext<ReferralDbContext>(options =>
             options.UseInMemoryDatabase("ReferralDb"));
-            
+
             builder.Services.AddControllers();
 
-            
+
             // Add Swagger services
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -42,6 +44,8 @@ namespace API
             builder.Services.AddValidatorsFromAssemblyContaining<ReferralAddRequestValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<ReferralAttributionRequestValidator>();
             builder.Services.AddFluentValidationAutoValidation();
+
+            configureJWT(builder);
 
             //Inject the precise implementation of Middleware
             builder.Services.AddScoped<ExceptionHandlingMiddleware>();
@@ -64,11 +68,31 @@ namespace API
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
 
             app.Run();
+        }
+
+        static void configureJWT(WebApplicationBuilder wab)
+        {
+            wab.Services.AddAuthentication("Bearer")
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = "yourIssuer",
+                        ValidAudience = "yourAudience",
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes("yourSecretKey"))
+                    };
+                });
         }
     }
 }
