@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces;
 using Application.Services;
+using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructure;
 using Infrastructure.Repository;
@@ -12,9 +13,18 @@ namespace Tests
     {
         public ILog _log;
         public IUtilFeatures util;
+
+        public ReferralDbContext dbContext;
+
         public UserService userService;
         public UserRepository userRepo;
-        public ReferralDbContext dbContext;
+        
+        public ReferralRepository referralRepo;
+        public ReferralService referrals;
+
+        public readonly string defaultUid = "U1";
+        public readonly string refCode = "A1B2C3";
+        public readonly string referralName = "Jose";
 
         public TestSetup()
         {
@@ -26,6 +36,9 @@ namespace Tests
 
             userRepo = new UserRepository(dbContext);
             userService = prepareUserSetup(dbContext);
+
+            referralRepo = new ReferralRepository(dbContext);
+            referrals = new ReferralService(referralRepo, _log, util);
         }
         public ReferralDbContext prepareDbContext()
         {

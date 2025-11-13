@@ -11,8 +11,6 @@ namespace UserTests
     {
         
         private readonly TestSetup setup;
-        private readonly string defaultUid = "U1";
-        private readonly string refCode = "A1B2C3";
 
         public UserServiceTests()
         {
@@ -34,7 +32,7 @@ namespace UserTests
         [Fact]
         public async void ValidateReferralCode()
         {
-            string code = await setup.userService.GetUserReferralCode(defaultUid);
+            string code = await setup.userService.GetUserReferralCode(setup.defaultUid);
 
             Assert.True(setup.util.IsValidReferralCode(code));
         }
@@ -42,8 +40,8 @@ namespace UserTests
         [Fact]
         public async void SameReferralCodePerUser()
         {
-            string code1 = await setup.userService.GetUserReferralCode(defaultUid);
-            string code2 = await setup.userService.GetUserReferralCode(defaultUid);
+            string code1 = await setup.userService.GetUserReferralCode(setup.defaultUid);
+            string code2 = await setup.userService.GetUserReferralCode(setup.defaultUid);
 
             Assert.Equal(code1, code2);
             Assert.Equal(6, code1.Length);
@@ -52,9 +50,9 @@ namespace UserTests
         [Fact]
         public async void UniqueReferralPerUser()
         {
-            string code1 = await setup.userService.GetUserReferralCode(defaultUid);
+            string code1 = await setup.userService.GetUserReferralCode(setup.defaultUid);
             string code2 = await setup.userService.GetUserReferralCode("uid456");
-            string code3 = await setup.userService.GetUserReferralCode(defaultUid);
+            string code3 = await setup.userService.GetUserReferralCode(setup.defaultUid);
 
             Assert.NotEqual(code1, code2);
             Assert.Equal(code1, code3);
@@ -63,7 +61,7 @@ namespace UserTests
         [Fact]
         public void VeryInviteMessageSMS()
         {
-            string msg = setup.util.PrepareMessage(ReferralMethod.SMS, refCode);
+            string msg = setup.util.PrepareMessage(ReferralMethod.SMS, setup.refCode);
 
             Assert.True(msg[..4] == "Hi! ");
         }
@@ -71,7 +69,7 @@ namespace UserTests
         [Fact]
         public void VeryInviteMessageOtherApps()
         {
-            string msg = setup.util.PrepareMessage(ReferralMethod.SHARE, refCode);
+            string msg = setup.util.PrepareMessage(ReferralMethod.SHARE, setup.refCode);
 
             Assert.True(msg[..4] == "Hey\n");
         }
