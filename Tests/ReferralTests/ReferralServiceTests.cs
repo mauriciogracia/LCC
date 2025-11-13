@@ -5,6 +5,7 @@ using Domain.Interfaces;
 using Infrastructure;
 using Infrastructure.Repository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace ReferralTests
 {
@@ -30,10 +31,12 @@ namespace ReferralTests
 
             dbContext.Database.EnsureCreated();
 
-            var userRepo = new UserRepository(dbContext);
+            
             var referralRepo = new ReferralRepository(dbContext);
             util = new UtilService();
-            users = new UserService(userRepo, _log, util);
+
+
+            
             referrals = new ReferralService(referralRepo, _log, util);
         }
 

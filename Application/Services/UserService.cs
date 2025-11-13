@@ -1,6 +1,8 @@
 ﻿using Application.Interfaces;
 using Domain.Entities;
 using Domain.Interfaces;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Application.Services
 {
@@ -9,12 +11,39 @@ namespace Application.Services
         private readonly IRepository<User> users;
         private readonly IUtilFeatures util;
         ILog log;
+        private readonly ITokenService tokenService;
 
-        public UserService(IRepository<User> usersRepo, ILog logger, IUtilFeatures UtilFeatures)
+        public UserService(IRepository<User> usersRepo, ILog logger, IUtilFeatures UtilFeatures, ITokenService ts)
         {
             users = usersRepo;
             util =  UtilFeatures;
             log = logger;
+            tokenService = ts;
+        }
+        public async Task<string> AuthenticateUser(string username, string password)
+        {
+            var user = users.GetByFilter(u => u.Email == username).FirstOrDefault();
+
+            if (user == null)
+                return string.Empty;
+
+            // Hash the incoming raw password
+            var hashedInput = HashPassword(password);
+
+            if (user.Password != hashedInput)
+                return string.Empty;
+
+            // Issue JWT
+            return tokenService.GenerateToken(user);
+        }
+
+        private string HashPassword(string password)
+        {
+            // Example: PBKDF2
+            using var sha = SHA256.Create();
+            var bytes = Encoding.UTF8.GetBytes(password);
+            var hash = sha.ComputeHash(bytes);
+            return Convert.ToBase64String(hash);
         }
 
         /// <summary>

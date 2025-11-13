@@ -27,6 +27,7 @@ namespace API
             builder.Services.AddScoped<IReferralFeatures, ReferralService>();
             builder.Services.AddScoped<IRepository<User>, UserRepository>();
             builder.Services.AddScoped<IRepository<Referral>, ReferralRepository>();
+            builder.Services.AddScoped<ITokenService, TokenService>();
 
             builder.Services.AddDbContext<ReferralDbContext>(options =>
             options.UseInMemoryDatabase("ReferralDb"));
